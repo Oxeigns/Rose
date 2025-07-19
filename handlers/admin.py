@@ -1,9 +1,9 @@
 from pyrogram import Client, filters
-from utils.decorators import admin_required, is_admin
+from pyrogram.handlers import MessageHandler
+from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
 from buttons.admin import admin_panel
 
-@Client.on_message(filters.command('promote') & filters.group)
 @is_admin
 async def promote(client, message):
     if not message.reply_to_message:
@@ -24,7 +24,6 @@ async def promote(client, message):
     except Exception as e:
         await message.reply(f'Failed to promote: {e}')
 
-@Client.on_message(filters.command('demote') & filters.group)
 @is_admin
 async def demote(client, message):
     if not message.reply_to_message:
@@ -46,7 +45,6 @@ async def demote(client, message):
     except Exception as e:
         await message.reply(f'Failed to demote: {e}')
 
-@Client.on_message(filters.command('adminlist') & filters.group)
 @is_admin
 async def adminlist(client, message):
     members = await client.get_chat_members(message.chat.id, filter='administrators')
@@ -56,13 +54,11 @@ async def adminlist(client, message):
     await message.reply(text)
 
 
-@Client.on_message(filters.command('admincache') & filters.group)
 @is_admin
 async def admincache(client, message):
     await message.reply('Admin cache refreshed.')
 
 
-@Client.on_message(filters.command('anonadmin') & filters.group)
 @is_admin
 async def anonadmin(client, message):
     if len(message.command) < 2:
@@ -77,7 +73,6 @@ async def anonadmin(client, message):
     await message.reply(f'Anon admin set to {value}.')
 
 
-@Client.on_message(filters.command('adminerror') & filters.group)
 @is_admin
 async def adminerror(client, message):
     if len(message.command) < 2:
@@ -92,7 +87,6 @@ async def adminerror(client, message):
     await message.reply(f'Admin errors set to {value}.')
 
 
-@Client.on_message(filters.command('admin') & filters.group)
 @is_admin
 async def admin_menu(client, message):
     await message.reply(
@@ -102,4 +96,10 @@ async def admin_menu(client, message):
 
 
 def register(app):
-    pass
+    app.add_handler(MessageHandler(promote, filters.command('promote') & filters.group))
+    app.add_handler(MessageHandler(demote, filters.command('demote') & filters.group))
+    app.add_handler(MessageHandler(adminlist, filters.command('adminlist') & filters.group))
+    app.add_handler(MessageHandler(admincache, filters.command('admincache') & filters.group))
+    app.add_handler(MessageHandler(anonadmin, filters.command('anonadmin') & filters.group))
+    app.add_handler(MessageHandler(adminerror, filters.command('adminerror') & filters.group))
+    app.add_handler(MessageHandler(admin_menu, filters.command('admin') & filters.group))

@@ -1,0 +1,8 @@
+name: rosebot
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - pyrogram
+      - tgcrypto
+      - aiosqlite
