@@ -1,9 +1,9 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler
 from utils.decorators import is_admin
 from utils.db import add_filter, remove_filter, list_filters, get_filter, clear_filters
 
 
-@Client.on_message(filters.command('filter') & filters.group)
 @is_admin
 async def add_filter_cmd(client, message):
     if len(message.command) < 3:
@@ -15,7 +15,6 @@ async def add_filter_cmd(client, message):
     await message.reply(f'Filter "{keyword}" added.')
 
 
-@Client.on_message(filters.command('stop') & filters.group)
 @is_admin
 async def stop_filter_cmd(client, message):
     if len(message.command) < 2:
@@ -26,7 +25,6 @@ async def stop_filter_cmd(client, message):
     await message.reply(f'Removed filter "{keyword}".')
 
 
-@Client.on_message(filters.command('filters') & filters.group)
 async def list_filters_cmd(client, message):
     words = list_filters(message.chat.id)
     if not words:
@@ -35,14 +33,12 @@ async def list_filters_cmd(client, message):
         await message.reply('\n'.join(words))
 
 
-@Client.on_message(filters.command('stopall') & filters.group)
 @is_admin
 async def stopall_cmd(client, message):
     clear_filters(message.chat.id)
     await message.reply('All filters cleared.')
 
 
-@Client.on_message(filters.text & filters.group, group=1)
 async def filter_worker(client, message):
     text = message.text.lower()
     for word in list_filters(message.chat.id):
@@ -54,4 +50,8 @@ async def filter_worker(client, message):
 
 
 def register(app):
-    pass
+    app.add_handler(MessageHandler(add_filter_cmd, filters.command('filter') & filters.group))
+    app.add_handler(MessageHandler(stop_filter_cmd, filters.command('stop') & filters.group))
+    app.add_handler(MessageHandler(list_filters_cmd, filters.command('filters') & filters.group))
+    app.add_handler(MessageHandler(stopall_cmd, filters.command('stopall') & filters.group))
+    app.add_handler(MessageHandler(filter_worker, filters.text & filters.group), group=1)

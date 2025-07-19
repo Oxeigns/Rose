@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 MODULE_BUTTONS = [
@@ -10,14 +11,12 @@ MODULE_BUTTONS = [
     ('Lock \ud83d\udd12', 'lock:open'),
 ]
 
-@Client.on_message(filters.command('start'))
 async def start(client, message):
     await message.reply(
         '**Rose Bot**\nUse /menu to view modules.',
         quote=True
     )
 
-@Client.on_message(filters.command('menu'))
 async def menu(client, message):
     markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
@@ -28,7 +27,6 @@ async def menu(client, message):
         quote=True
     )
 
-@Client.on_callback_query(filters.regex('^[a-z]+:open$'))
 async def panel_open(client, query):
     module = query.data.split(':', 1)[0]
     await query.message.edit(
@@ -37,7 +35,6 @@ async def panel_open(client, query):
     )
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^main:menu$'))
 async def menu_cb(client, query):
     markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
@@ -47,4 +44,7 @@ async def menu_cb(client, query):
 
 
 def register(app):
-    pass
+    app.add_handler(MessageHandler(start, filters.command('start')))
+    app.add_handler(MessageHandler(menu, filters.command('menu')))
+    app.add_handler(CallbackQueryHandler(panel_open, filters.regex('^[a-z]+:open$')))
+    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex('^main:menu$')))
