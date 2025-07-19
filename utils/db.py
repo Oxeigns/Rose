@@ -27,3 +27,21 @@ with closing(conn.cursor()) as cur:
 
 def get_conn():
     return conn
+
+def set_chat_setting(chat_id: int, key: str, value: str) -> None:
+    with closing(conn.cursor()) as cur:
+        cur.execute(
+            'REPLACE INTO settings (chat_id, key, value) VALUES (?,?,?)',
+            (chat_id, key, value),
+        )
+        conn.commit()
+
+
+def get_chat_setting(chat_id: int, key: str, default=None):
+    with closing(conn.cursor()) as cur:
+        cur.execute(
+            'SELECT value FROM settings WHERE chat_id=? AND key=?',
+            (chat_id, key),
+        )
+        row = cur.fetchone()
+    return row[0] if row else default
