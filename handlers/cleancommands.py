@@ -31,7 +31,10 @@ async def disable_clean(client, message):
     await message.reply('Command cleaning disabled.')
 
 
-@Client.on_message(filters.command & (filters.group | filters.private), group=-1)
+# Apply to all messages starting with a command prefix so they can be removed
+# after a delay. ``filters.command`` requires specifying commands explicitly,
+# so we use a regex filter matching the leading '/' instead.
+@Client.on_message(filters.regex(r'^/') & (filters.group | filters.private), group=-1)
 async def auto_clean(client, message):
     delay = get_chat_setting(message.chat.id, 'clean_delay', '0')
     try:
