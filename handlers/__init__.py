@@ -13,3 +13,11 @@ def register_all(app):
         module = importlib.import_module(f'handlers.{module_name}')
         if hasattr(module, 'register'):
             module.register(app)
+        # Support modules that use the ``@Client.on_*`` decorators without
+        # providing an explicit ``register`` function. Those decorators attach
+        # handler information to the decorated callables via a ``handlers``
+        # attribute which we can use to register them here.
+        for attr in module.__dict__.values():
+            if callable(attr) and hasattr(attr, "handlers"):
+                for handler, group in getattr(attr, "handlers"):
+                    app.add_handler(handler, group)
