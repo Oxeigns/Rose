@@ -43,8 +43,55 @@ async def menu_cb(client, query):
     await query.answer()
 
 
+RUN_STRINGS = [
+    "Eeny meeny miny moe...",
+    "Time to run away!",
+    "Let's hide!",
+    "Runs to the hills!",
+]
+
+async def runs(client, message):
+    await message.reply(random.choice(RUN_STRINGS))
+
+async def get_id(client, message):
+    target = message.reply_to_message.from_user if message.reply_to_message else message.from_user
+    if message.command and len(message.command) > 1:
+        username = message.command[1].lstrip('@')
+        try:
+            target = await client.get_users(username)
+        except Exception:
+            pass
+    await message.reply(f'`{target.id}`')
+
+async def info(client, message):
+    user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
+    text = f"**{user.first_name}**\nID: `{user.id}`"
+    if user.username:
+        text += f"\n@{user.username}"
+    if user.bio:
+        text += f"\n{user.bio}"
+    await message.reply(text)
+
+async def donate(client, message):
+    await message.reply("[Donate here](https://example.com/donate)", disable_web_page_preview=True)
+
+async def markdown_help(client, message):
+    if message.chat.type != 'private':
+        await message.reply('I\'ve messaged you the Markdown guide!')
+    await client.send_message(message.from_user.id, '**Markdown Guide**\nUse `*bold*`, `_italic_`, `[text](url)`')
+
+async def limits(client, message):
+    await message.reply('No limits are currently enforced.')
+
+
 def register(app):
     app.add_handler(MessageHandler(start, filters.command('start')))
     app.add_handler(MessageHandler(menu, filters.command('menu')))
+    app.add_handler(MessageHandler(runs, filters.command('runs')))
+    app.add_handler(MessageHandler(get_id, filters.command('id')))
+    app.add_handler(MessageHandler(info, filters.command('info')))
+    app.add_handler(MessageHandler(donate, filters.command('donate')))
+    app.add_handler(MessageHandler(markdown_help, filters.command('markdownhelp')))
+    app.add_handler(MessageHandler(limits, filters.command('limits')))
     app.add_handler(CallbackQueryHandler(panel_open, filters.regex('^[a-z]+:open$')))
     app.add_handler(CallbackQueryHandler(menu_cb, filters.regex('^main:menu$')))
