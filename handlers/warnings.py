@@ -4,6 +4,8 @@ from pyrogram.handlers import MessageHandler
 from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
 from db.warns import add_warn, get_warns, reset_warns, remove_warn
+import aiosqlite
+from db.warns import DB_PATH
 
 
 DEFAULT_LIMIT = 3
@@ -33,6 +35,23 @@ async def warn_user(client, message):
             await asyncio.sleep(time_value)
             await client.unrestrict_chat_member(chat_id, user_id)
         await reset_warns(user_id, chat_id)
+
+
+@is_admin
+async def dwarn_user(client, message):
+    if not message.reply_to_message:
+        await message.reply('Reply to a user to warn.')
+        return
+    await message.reply_to_message.delete()
+    await warn_user(client, message)
+
+
+@is_admin
+async def swarn_user(client, message):
+    if not message.reply_to_message:
+        return
+    await message.reply_to_message.delete()
+    await warn_user(client, message)
 
 @is_admin
 async def soft_warn(client, message):
@@ -94,6 +113,21 @@ async def rmwarn_cmd(client, message):
 
 
 @is_admin
+async def reset_all_warns(client, message):
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute('DELETE FROM warns WHERE chat_id=?', (message.chat.id,))
+        await db.commit()
+    await message.reply('All warns reset for this chat.')
+
+
+async def warnings_settings(client, message):
+    limit = get_chat_setting(message.chat.id, 'warn_limit', DEFAULT_LIMIT)
+    mode = get_chat_setting(message.chat.id, 'warn_mode', 'ban')
+    time_value = get_chat_setting(message.chat.id, 'warn_time', '600')
+    await message.reply(f'Limit: {limit}\nMode: {mode}\nTime: {time_value}s')
+
+
+@is_admin
 async def warnlimit(client, message):
     if len(message.command) == 1:
         limit = get_chat_setting(message.chat.id, 'warn_limit', DEFAULT_LIMIT)
@@ -139,10 +173,13 @@ async def warntime(client, message):
 
 def register(app):
     app.add_handler(MessageHandler(warn_user, filters.command('warn') & filters.group))
-    app.add_handler(MessageHandler(soft_warn, filters.command('swarn') & filters.group))
+    app.add_handler(MessageHandler(dwarn_user, filters.command('dwarn') & filters.group))
+    app.add_handler(MessageHandler(swarn_user, filters.command('swarn') & filters.group))
     app.add_handler(MessageHandler(warns, filters.command('warns') & filters.group))
     app.add_handler(MessageHandler(resetwarn_cmd, filters.command('resetwarn') & filters.group))
-    app.add_handler(MessageHandler(rmwarn_cmd, filters.command(['dwarn', 'rmwarn']) & filters.group))
+    app.add_handler(MessageHandler(rmwarn_cmd, filters.command('rmwarn') & filters.group))
+    app.add_handler(MessageHandler(reset_all_warns, filters.command('resetallwarns') & filters.group))
     app.add_handler(MessageHandler(warnlimit, filters.command('warnlimit') & filters.group))
     app.add_handler(MessageHandler(warnmode, filters.command('warnmode') & filters.group))
     app.add_handler(MessageHandler(warntime, filters.command('warntime') & filters.group))
+    app.add_handler(MessageHandler(warnings_settings, filters.command('warnings') & filters.group))
