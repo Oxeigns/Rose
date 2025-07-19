@@ -4,7 +4,7 @@ from pyrogram import Client
 
 from .db import get_conn
 
-async def is_admin(client: Client, message: Message) -> bool:
+async def user_is_admin(client: Client, message: Message) -> bool:
     if message.chat.type == 'private':
         return True
     member = await client.get_chat_member(message.chat.id, message.from_user.id)
@@ -13,8 +13,12 @@ async def is_admin(client: Client, message: Message) -> bool:
 def admin_required(func):
     @wraps(func)
     async def wrapper(client: Client, message: Message, *args, **kwargs):
-        if not await is_admin(client, message):
+        if not await user_is_admin(client, message):
             await message.reply("You need to be an admin to do that.")
             return
         return await func(client, message, *args, **kwargs)
     return wrapper
+
+def is_admin(func):
+    """Decorator to allow only admins to run a command."""
+    return admin_required(func)
