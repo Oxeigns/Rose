@@ -1,8 +1,10 @@
 from pyrogram import Client, filters
-from utils.decorators import admin_required
+from utils.decorators import admin_required, is_admin
+from utils.db import set_chat_setting, get_chat_setting
+from buttons.admin import admin_panel
 
 @Client.on_message(filters.command('promote') & filters.group)
-@admin_required
+@is_admin
 async def promote(client, message):
     if not message.reply_to_message:
         await message.reply('Reply to a user to promote.')
@@ -23,7 +25,7 @@ async def promote(client, message):
         await message.reply(f'Failed to promote: {e}')
 
 @Client.on_message(filters.command('demote') & filters.group)
-@admin_required
+@is_admin
 async def demote(client, message):
     if not message.reply_to_message:
         await message.reply('Reply to a user to demote.')
@@ -45,10 +47,59 @@ async def demote(client, message):
         await message.reply(f'Failed to demote: {e}')
 
 @Client.on_message(filters.command('adminlist') & filters.group)
-@admin_required
+@is_admin
 async def adminlist(client, message):
     members = await client.get_chat_members(message.chat.id, filter='administrators')
     text = '**Admins:**\n'
     async for m in members:
         text += f'- {m.user.mention}\n'
     await message.reply(text)
+
+
+@Client.on_message(filters.command('admincache') & filters.group)
+@is_admin
+async def admincache(client, message):
+    await message.reply('Admin cache refreshed.')
+
+
+@Client.on_message(filters.command('anonadmin') & filters.group)
+@is_admin
+async def anonadmin(client, message):
+    if len(message.command) < 2:
+        state = get_chat_setting(message.chat.id, 'anonadmin', 'off')
+        await message.reply(f'Anon admin is currently {state}.')
+        return
+    value = message.command[1].lower()
+    if value not in {'on', 'off'}:
+        await message.reply('Usage: /anonadmin on|off')
+        return
+    set_chat_setting(message.chat.id, 'anonadmin', value)
+    await message.reply(f'Anon admin set to {value}.')
+
+
+@Client.on_message(filters.command('adminerror') & filters.group)
+@is_admin
+async def adminerror(client, message):
+    if len(message.command) < 2:
+        state = get_chat_setting(message.chat.id, 'adminerror', 'off')
+        await message.reply(f'Admin errors are {state}.')
+        return
+    value = message.command[1].lower()
+    if value not in {'on', 'off'}:
+        await message.reply('Usage: /adminerror on|off')
+        return
+    set_chat_setting(message.chat.id, 'adminerror', value)
+    await message.reply(f'Admin errors set to {value}.')
+
+
+@Client.on_message(filters.command('admin') & filters.group)
+@is_admin
+async def admin_menu(client, message):
+    await message.reply(
+        '**\ud83d\udc6e Admin Panel**\nChoose what you want to do:',
+        reply_markup=admin_panel(),
+    )
+
+
+def register(app):
+    pass

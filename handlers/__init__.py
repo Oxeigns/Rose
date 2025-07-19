@@ -10,4 +10,6 @@ for file in Path(__file__).parent.glob('*.py'):
 
 def register_all(app):
     for module_name in ALL_MODULES:
-        importlib.import_module(f'handlers.{module_name}')
+        module = importlib.import_module(f'handlers.{module_name}')
+        if hasattr(module, 'register'):
+            module.register(app)
