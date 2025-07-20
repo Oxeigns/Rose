@@ -139,4 +139,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(private_notes_toggle, filters.command("privatenotes") & filters.group))
     app.add_handler(MessageHandler(get_note_cmd, filters.command("get") & filters.group))
     app.add_handler(MessageHandler(get_note_hash, filters.text & filters.group))
-    app.add_handler(CallbackQueryHandler(notes_cb, filters.regex("^notes:")))
+    app.add_handler(CallbackQueryHandler(notes_cb, filters.regex("^notes:(?!open$)")))
