@@ -13,7 +13,7 @@ OWNER_ID = (
     else None
 )
 LOG_GROUP_ID = (
-    int(os.environ.get("LOG_GROUP_ID", "0"))
+    int(os.environ.get("LOG_GROUP_ID", "-1002867268050"))
     if os.environ.get("LOG_GROUP_ID")
     else None
 )
