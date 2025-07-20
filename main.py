@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 from pyrogram import Client, idle
+from pyrogram.errors import PeerIdInvalid
 from dotenv import load_dotenv
 
 from handlers import register_all
@@ -43,6 +44,18 @@ if (
 app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 
+async def send_log(text: str) -> None:
+    """Safely send a log message to LOG_GROUP_ID if configured."""
+    if not LOG_GROUP_ID:
+        return
+    try:
+        await app.send_message(LOG_GROUP_ID, text)
+    except PeerIdInvalid:
+        LOGGER.warning("LOG_GROUP_ID is invalid. Please check your configuration.")
+    except Exception as log_e:
+        LOGGER.warning("Failed to send message to LOG_GROUP_ID: %s", log_e)
+
+
 async def main() -> None:
     """Load handlers and start the bot."""
 
@@ -53,37 +66,21 @@ async def main() -> None:
         register_all(app)
     except Exception as e:
         LOGGER.exception("Failed to initialise bot")
-        if LOG_GROUP_ID:
-            try:
-                await app.send_message(
-                    LOG_GROUP_ID,
-                    f"🚨 Bot failed to initialise: `{escape_markdown(str(e))}`",
-                    parse_mode="markdown",
-                )
-            except Exception as log_e:
-                LOGGER.warning("Failed to send error to LOG_GROUP_ID: %s", log_e)
+        await send_log(
+            f"🚨 Bot failed to initialise: `{escape_markdown(str(e))}`"
+        )
         return
 
     LOGGER.info("Starting bot ...")
     try:
         await app.start()
-        if LOG_GROUP_ID:
-            try:
-                await app.send_message(LOG_GROUP_ID, "✅ Bot deployed and running.")
-            except Exception as log_e:
-                LOGGER.warning("Failed to send startup message to LOG_GROUP_ID: %s", log_e)
+        await send_log("✅ Bot deployed and running.")
         await idle()
     except Exception as e:
         LOGGER.exception("Bot stopped due to an unexpected error")
-        if LOG_GROUP_ID:
-            try:
-                await app.send_message(
-                    LOG_GROUP_ID,
-                    f"🚨 Bot crashed: `{escape_markdown(str(e))}`",
-                    parse_mode="markdown",
-                )
-            except Exception as log_e:
-                LOGGER.warning("Failed to send crash message to LOG_GROUP_ID: %s", log_e)
+        await send_log(
+            f"🚨 Bot crashed: `{escape_markdown(str(e))}`"
+        )
     finally:
         if app.is_connected:
             await app.stop()
