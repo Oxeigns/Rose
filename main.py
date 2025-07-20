@@ -1,11 +1,44 @@
+"""Main entry point for the Telegram bot."""
+
+import logging
+import os
 from pyrogram import Client
+
 from handlers import register_all
-from config import API_ID, API_HASH, BOT_TOKEN
 
-app = Client('rose_bot', api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-register_all(app)
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+LOGGER = logging.getLogger(__name__)
 
-if __name__ == '__main__':
-    print('Starting bot...')
-    app.run()
+# Bot configuration with environment overrides
+API_ID = int(os.environ.get("API_ID", "123456"))
+API_HASH = os.environ.get("API_HASH", "YOUR_API_HASH")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
+SESSION_NAME = os.environ.get("SESSION_NAME", "rose_bot")
+
+# Initialise the Pyrogram client
+app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+
+def main() -> None:
+    """Load handlers and start the bot."""
+
+    try:
+        LOGGER.info("Loading handlers ...")
+        register_all(app)
+    except Exception:
+        LOGGER.exception("Failed to load handlers")
+        return
+
+    LOGGER.info("Starting bot ...")
+    try:
+        app.run()
+    except Exception:
+        LOGGER.exception("Bot stopped due to an unexpected error")
+
+
+if __name__ == "__main__":
+    main()
