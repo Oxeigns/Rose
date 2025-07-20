@@ -54,13 +54,23 @@ MODULE_PANELS = {
 async def start(client: Client, message: Message):
     await message.reply_text(
         "**🌹 Rose Bot**\nI help moderate and protect your group.",
-        reply_markup=build_menu(),
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("📋 Menu", callback_data="menu:open")]]
+        ),
         quote=True,
     )
 
 # Menu control panel
 async def menu(client: Client, message: Message):
     await message.reply_text("**📋 Control Panel**", reply_markup=build_menu(), quote=True)
+
+async def menu_open(client: Client, query: CallbackQuery):
+    await query.message.edit_text(
+        "**📋 Control Panel**",
+        reply_markup=build_menu(),
+        parse_mode="markdown",
+    )
+    await query.answer()
 
 # Panel open handler
 async def panel_open(client: Client, query: CallbackQuery):
@@ -154,5 +164,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(limits, filters.command("limits")))
 
     app.add_handler(CallbackQueryHandler(panel_open, filters.regex("^[a-z]+:open$")))
+    app.add_handler(CallbackQueryHandler(menu_open, filters.regex("^menu:open$")))
     app.add_handler(CallbackQueryHandler(menu_cb, filters.regex("^main:menu$")))
     app.add_handler(CallbackQueryHandler(close_cb, filters.regex("^main:close$")))
