@@ -26,6 +26,7 @@ async def register_all(app: Client) -> None:
             continue
 
         try:
+            # Register handler via register(app)
             if hasattr(module, "register"):
                 reg = getattr(module, "register")
                 if inspect.iscoroutinefunction(reg):
@@ -33,12 +34,12 @@ async def register_all(app: Client) -> None:
                 else:
                     reg(app)
 
-            # If using Pyrogram @Client.on_* decorators
+            # Register decorator-based handlers manually
             for attr in module.__dict__.values():
                 if callable(attr) and hasattr(attr, "handlers"):
                     for handler, group in getattr(attr, "handlers"):
                         app.add_handler(handler, group)
 
             LOGGER.info("✅ Loaded handler: %s", module_name)
-        except Exception:
-            LOGGER.exception("❌ Error loading handlers from %s", module_name)
+        except Exception as err:
+            LOGGER.exception("❌ Error loading handlers from %s: %s", module_name, err)
