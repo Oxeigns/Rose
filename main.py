@@ -25,6 +25,18 @@ API_HASH = os.environ.get("API_HASH", "YOUR_API_HASH")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
 SESSION_NAME = os.environ.get("SESSION_NAME", "rose_bot")
 
+# Abort early if credentials were not provided
+if (
+    API_ID == 123456 or
+    API_HASH == "YOUR_API_HASH" or
+    BOT_TOKEN == "YOUR_BOT_TOKEN"
+):
+    LOGGER.error(
+        "Missing API credentials. Please populate a .env file "
+        "or set the API_ID, API_HASH and BOT_TOKEN environment variables."
+    )
+    raise SystemExit(1)
+
 # Initialise the Pyrogram client
 app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
@@ -48,7 +60,8 @@ async def main() -> None:
     except Exception:
         LOGGER.exception("Bot stopped due to an unexpected error")
     finally:
-        await app.stop()
+        if app.is_connected:
+            await app.stop()
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
    ```bash
    python main.py
    ```
+   The bot will exit with an error message if any required credential is missing.
 
 ## Deployment
 Example files are provided for running on container platforms:
