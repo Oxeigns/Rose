@@ -3,12 +3,14 @@ from pyrogram.types import Message, CallbackQuery
 from pyrogram.handlers import CallbackQueryHandler
 from buttons.approvals import approvals_panel
 from utils.decorators import admin_required
-
-# Temporary in-memory store (use DB in production)
-APPROVED_USERS = {}  # chat_id: set(user_ids)
-
-def is_approved(chat_id: int, user_id: int) -> bool:
-    return user_id in APPROVED_USERS.get(chat_id, set())
+from utils.db import (
+    add_approval,
+    remove_approval,
+    list_approvals,
+    clear_approvals,
+    get_chat_setting,
+    set_chat_setting,
+)
 
 @Client.on_message(filters.command("approve") & filters.group)
 @admin_required
@@ -20,8 +22,11 @@ async def approve_user(client: Client, message: Message):
     user_id = message.reply_to_message.from_user.id
     chat_id = message.chat.id
 
-    APPROVED_USERS.setdefault(chat_id, set()).add(user_id)
-    await message.reply_text(f"✅ Approved [{user_id}](tg://user?id={user_id}).", parse_mode="markdown")
+    await add_approval(chat_id, user_id)
+    await message.reply_text(
+        f"✅ Approved [{user_id}](tg://user?id={user_id}).",
+        parse_mode="markdown",
+    )
 
 @Client.on_message(filters.command("unapprove") & filters.group)
 @admin_required
@@ -33,14 +38,17 @@ async def unapprove_user(client: Client, message: Message):
     user_id = message.reply_to_message.from_user.id
     chat_id = message.chat.id
 
-    APPROVED_USERS.setdefault(chat_id, set()).discard(user_id)
-    await message.reply_text(f"🚫 Unapproved [{user_id}](tg://user?id={user_id}).", parse_mode="markdown")
+    await remove_approval(chat_id, user_id)
+    await message.reply_text(
+        f"🚫 Unapproved [{user_id}](tg://user?id={user_id}).",
+        parse_mode="markdown",
+    )
 
 @Client.on_message(filters.command("approved") & filters.group)
 @admin_required
 async def list_approved(client: Client, message: Message):
     chat_id = message.chat.id
-    users = APPROVED_USERS.get(chat_id, set())
+    users = await list_approvals(chat_id)
     
     if not users:
         await message.reply_text("No users are currently approved.")
@@ -56,8 +64,31 @@ async def list_approved(client: Client, message: Message):
 @admin_required
 async def clear_approved(client: Client, message: Message):
     chat_id = message.chat.id
-    APPROVED_USERS[chat_id] = set()
+    await clear_approvals(chat_id)
     await message.reply_text("✅ All approved users have been cleared.")
+
+
+@Client.on_message(filters.command("approvalmode") & filters.group)
+@admin_required
+async def approval_mode_cmd(client: Client, message: Message):
+    if len(message.command) == 1:
+        current = get_chat_setting(message.chat.id, "approval_mode", "off")
+        await message.reply_text(
+            f"🔏 Approval mode is `{current}`.", parse_mode="markdown"
+        )
+        return
+
+    val = message.command[1].lower()
+    if val not in {"on", "off"}:
+        await message.reply_text(
+            "Usage: `/approvalmode <on/off>`", parse_mode="markdown"
+        )
+        return
+
+    set_chat_setting(message.chat.id, "approval_mode", val)
+    await message.reply_text(
+        f"🔏 Approval mode set to `{val}`.", parse_mode="markdown"
+    )
 
 
 # Callback handler for approvals panel

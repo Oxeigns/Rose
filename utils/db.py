@@ -150,6 +150,48 @@ async def is_approved(chat_id: int, user_id: int) -> bool:
         return bool(row)
 
 
+async def add_approval(chat_id: int, user_id: int) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS approvals (chat_id INTEGER, user_id INTEGER, PRIMARY KEY(chat_id, user_id))"
+        )
+        await db.execute(
+            "REPLACE INTO approvals (chat_id, user_id) VALUES (?, ?)",
+            (chat_id, user_id),
+        )
+        await db.commit()
+
+
+async def remove_approval(chat_id: int, user_id: int) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "DELETE FROM approvals WHERE chat_id=? AND user_id=?",
+            (chat_id, user_id),
+        )
+        await db.commit()
+
+
+async def list_approvals(chat_id: int) -> list[int]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS approvals (chat_id INTEGER, user_id INTEGER, PRIMARY KEY(chat_id, user_id))"
+        )
+        rows = await db.execute_fetchall(
+            "SELECT user_id FROM approvals WHERE chat_id=?",
+            (chat_id,),
+        )
+        return [r[0] for r in rows]
+
+
+async def clear_approvals(chat_id: int) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "DELETE FROM approvals WHERE chat_id=?",
+            (chat_id,),
+        )
+        await db.commit()
+
+
 async def get_approval_mode(chat_id: int) -> bool:
     # stored in settings table as approval_mode=on|off
     val = await get_setting(chat_id, "approval_mode", "off")
