@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 from handlers import register_all
 from db import init_db
+from config import LOG_GROUP_ID
+from utils.markdown import escape_markdown
 
 
 logging.basicConfig(
@@ -49,16 +51,39 @@ async def main() -> None:
         await init_db()
         LOGGER.info("Loading handlers ...")
         register_all(app)
-    except Exception:
+    except Exception as e:
         LOGGER.exception("Failed to initialise bot")
+        if LOG_GROUP_ID:
+            try:
+                await app.send_message(
+                    LOG_GROUP_ID,
+                    f"🚨 Bot failed to initialise: `{escape_markdown(str(e))}`",
+                    parse_mode="markdown",
+                )
+            except Exception as log_e:
+                LOGGER.warning("Failed to send error to LOG_GROUP_ID: %s", log_e)
         return
 
     LOGGER.info("Starting bot ...")
     try:
         await app.start()
+        if LOG_GROUP_ID:
+            try:
+                await app.send_message(LOG_GROUP_ID, "✅ Bot deployed and running.")
+            except Exception as log_e:
+                LOGGER.warning("Failed to send startup message to LOG_GROUP_ID: %s", log_e)
         await idle()
-    except Exception:
+    except Exception as e:
         LOGGER.exception("Bot stopped due to an unexpected error")
+        if LOG_GROUP_ID:
+            try:
+                await app.send_message(
+                    LOG_GROUP_ID,
+                    f"🚨 Bot crashed: `{escape_markdown(str(e))}`",
+                    parse_mode="markdown",
+                )
+            except Exception as log_e:
+                LOGGER.warning("Failed to send crash message to LOG_GROUP_ID: %s", log_e)
     finally:
         if app.is_connected:
             await app.stop()
