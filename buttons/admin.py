@@ -1,12 +1,20 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+def admin_panel() -> InlineKeyboardMarkup:
+    """
+    Returns an inline keyboard markup for admin controls.
 
-def admin_panel():
+    Includes:
+    - Promote
+    - Demote
+    - List Admins
+    - Back to main menu
+    """
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("\u2795 Promote", callback_data="admin:promote"),
-            InlineKeyboardButton("\u2796 Demote", callback_data="admin:demote"),
+            InlineKeyboardButton("➕ Promote", callback_data="admin:promote"),
+            InlineKeyboardButton("➖ Demote", callback_data="admin:demote"),
         ],
-        [InlineKeyboardButton("\ud83d\udc65 Admins", callback_data="admin:list")],
-        [InlineKeyboardButton("\u2b05\ufe0f Back", callback_data="main:menu")],
+        [InlineKeyboardButton("👥 Admins", callback_data="admin:list")],
+        [InlineKeyboardButton("⬅️ Back", callback_data="main:menu")],
     ])
