@@ -1,6 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
-from pyrogram.handlers import CallbackQueryHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
 from buttons.admin import admin_panel
