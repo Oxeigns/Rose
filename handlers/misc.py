@@ -1,97 +1,114 @@
+import random
 from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
+# Control panel button layout
 MODULE_BUTTONS = [
-    ('Admin \u2699\ufe0f', 'admin:open'),
-    ('Filters \ud83d\udcac', 'filters:open'),
-    ('Rules \ud83d\udcdc', 'rules:open'),
-    ('Warnings \u26a0\ufe0f', 'warnings:open'),
-    ('Approvals \u2705', 'approvals:open'),
-    ('Lock \ud83d\udd12', 'lock:open'),
+    ("⚙️ Admin", "admin:open"),
+    ("💬 Filters", "filters:open"),
+    ("📜 Rules", "rules:open"),
+    ("⚠️ Warnings", "warnings:open"),
+    ("✅ Approvals", "approvals:open"),
+    ("🔒 Lock", "lock:open"),
 ]
 
-async def start(client, message):
-    await message.reply(
-        '**Rose Bot**\nUse /menu to view modules.',
-        quote=True
+# Start command
+async def start(client: Client, message: Message):
+    await message.reply_text(
+        "**🌹 Rose Bot**\nI help moderate and protect your group.\nUse /menu to view control panel.",
+        quote=True,
     )
 
-async def menu(client, message):
+# Menu control panel
+async def menu(client: Client, message: Message):
     markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
     )
-    await message.reply(
-        '**Control Panel**',
-        reply_markup=markup,
-        quote=True
-    )
+    await message.reply_text("**📋 Control Panel**", reply_markup=markup, quote=True)
 
-async def panel_open(client, query):
-    module = query.data.split(':', 1)[0]
-    await query.message.edit(
-        f'**{module.title()} Panel**',
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('Back \u2b05\ufe0f', callback_data='main:menu')]])
+# Panel open handler
+async def panel_open(client: Client, query: CallbackQuery):
+    module = query.data.split(":")[0]
+    await query.message.edit_text(
+        f"**🔧 {module.title()} Panel**",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("⬅️ Back", callback_data="main:menu")]]
+        )
     )
     await query.answer()
 
-async def menu_cb(client, query):
+# Back to main menu
+async def menu_cb(client: Client, query: CallbackQuery):
     markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
     )
-    await query.message.edit('**Control Panel**', reply_markup=markup)
+    await query.message.edit_text("**📋 Control Panel**", reply_markup=markup)
     await query.answer()
 
-
+# Random run messages
 RUN_STRINGS = [
     "Eeny meeny miny moe...",
     "Time to run away!",
     "Let's hide!",
     "Runs to the hills!",
+    "🦶 Dashing off!"
 ]
 
-async def runs(client, message):
-    await message.reply(random.choice(RUN_STRINGS))
+async def runs(client: Client, message: Message):
+    await message.reply_text(random.choice(RUN_STRINGS))
 
-async def get_id(client, message):
-    target = message.reply_to_message.from_user if message.reply_to_message else message.from_user
-    if message.command and len(message.command) > 1:
-        username = message.command[1].lstrip('@')
-        try:
-            target = await client.get_users(username)
-        except Exception:
-            pass
-    await message.reply(f'`{target.id}`')
+# /id command
+async def get_id(client: Client, message: Message):
+    if message.reply_to_message:
+        target = message.reply_to_message.from_user
+    else:
+        target = message.from_user
 
-async def info(client, message):
+    await message.reply_text(f"🆔 ID: `{target.id}`", parse_mode="markdown")
+
+# /info command
+async def info(client: Client, message: Message):
     user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
-    text = f"**{user.first_name}**\nID: `{user.id}`"
+    text = f"**👤 User Info**\nName: {user.first_name}\nID: `{user.id}`"
     if user.username:
-        text += f"\n@{user.username}"
+        text += f"\nUsername: @{user.username}"
     if user.bio:
-        text += f"\n{user.bio}"
-    await message.reply(text)
+        text += f"\nBio: {user.bio}"
+    await message.reply_text(text, parse_mode="markdown")
 
-async def donate(client, message):
-    await message.reply("[Donate here](https://example.com/donate)", disable_web_page_preview=True)
+# /donate command
+async def donate(client: Client, message: Message):
+    await message.reply_text(
+        "[❤️ Donate here](https://example.com/donate) to support the bot's development!",
+        disable_web_page_preview=True,
+        parse_mode="markdown"
+    )
 
-async def markdown_help(client, message):
-    if message.chat.type != 'private':
-        await message.reply('I\'ve messaged you the Markdown guide!')
-    await client.send_message(message.from_user.id, '**Markdown Guide**\nUse `*bold*`, `_italic_`, `[text](url)`')
+# /markdownhelp command
+async def markdown_help(client: Client, message: Message):
+    if message.chat.type != "private":
+        await message.reply("📬 I’ve sent you the Markdown guide in private.")
+    await client.send_message(
+        message.from_user.id,
+        "**✏️ Markdown Guide**\nUse:\n- `*bold*`\n- `_italic_`\n- `[text](url)`",
+        parse_mode="markdown"
+    )
 
-async def limits(client, message):
-    await message.reply('No limits are currently enforced.')
+# /limits command
+async def limits(client: Client, message: Message):
+    await message.reply_text("🚫 No limits are currently enforced.")
 
+# Register all handlers
+def register(app: Client):
+    app.add_handler(MessageHandler(start, filters.command("start")))
+    app.add_handler(MessageHandler(menu, filters.command("menu")))
+    app.add_handler(MessageHandler(runs, filters.command("runs")))
+    app.add_handler(MessageHandler(get_id, filters.command("id")))
+    app.add_handler(MessageHandler(info, filters.command("info")))
+    app.add_handler(MessageHandler(donate, filters.command("donate")))
+    app.add_handler(MessageHandler(markdown_help, filters.command("markdownhelp")))
+    app.add_handler(MessageHandler(limits, filters.command("limits")))
 
-def register(app):
-    app.add_handler(MessageHandler(start, filters.command('start')))
-    app.add_handler(MessageHandler(menu, filters.command('menu')))
-    app.add_handler(MessageHandler(runs, filters.command('runs')))
-    app.add_handler(MessageHandler(get_id, filters.command('id')))
-    app.add_handler(MessageHandler(info, filters.command('info')))
-    app.add_handler(MessageHandler(donate, filters.command('donate')))
-    app.add_handler(MessageHandler(markdown_help, filters.command('markdownhelp')))
-    app.add_handler(MessageHandler(limits, filters.command('limits')))
-    app.add_handler(CallbackQueryHandler(panel_open, filters.regex('^[a-z]+:open$')))
-    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex('^main:menu$')))
+    app.add_handler(CallbackQueryHandler(panel_open, filters.regex("^[a-z]+:open$")))
+    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex("^main:menu$")))
