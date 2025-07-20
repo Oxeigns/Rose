@@ -58,7 +58,7 @@ async def main() -> None:
         await init_db()
         LOGGER.info("📦 Database initialized")
 
-        register_all(app)
+        await register_all(app)
         LOGGER.info("✅ Handlers registered")
 
         await send_log("✅ Bot deployed and running.")
