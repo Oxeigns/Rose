@@ -2,6 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
+from utils.markdown import escape_markdown
 
 @Client.on_message(filters.command("logchannel") & filters.group)
 @admin_required
@@ -9,7 +10,10 @@ async def logchannel_handler(client: Client, message: Message):
     if len(message.command) == 1:
         log_id = get_chat_setting(message.chat.id, "log_channel")
         if log_id:
-            await message.reply_text(f"📝 Log channel is set to: `{log_id}`", parse_mode="markdown")
+            safe_id = escape_markdown(str(log_id))
+            await message.reply_text(
+                f"📝 Log channel is set to: `{safe_id}`", parse_mode="markdown"
+            )
         else:
             await message.reply_text("ℹ️ No log channel set.")
         return
@@ -39,10 +43,17 @@ async def logchannel_handler(client: Client, message: Message):
             return
 
         set_chat_setting(message.chat.id, "log_channel", chat.id)
-        await message.reply_text(f"✅ Logs will be sent to: `{chat.title}` (`{chat.id}`)", parse_mode="markdown")
+        safe_title = escape_markdown(chat.title)
+        await message.reply_text(
+            f"✅ Logs will be sent to: `{safe_title}` (`{chat.id}`)",
+            parse_mode="markdown",
+        )
 
     except Exception as e:
-        await message.reply_text(f"❌ Failed to set log channel:\n`{e}`", parse_mode="markdown")
+        safe_err = escape_markdown(str(e))
+        await message.reply_text(
+            f"❌ Failed to set log channel:\n`{safe_err}`", parse_mode="markdown"
+        )
 
 
 # Util function used in other modules (e.g., warnings, filters, bans, etc.)

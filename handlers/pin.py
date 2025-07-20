@@ -2,6 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
+from utils.markdown import escape_markdown
 
 
 # Show current pinned message
@@ -64,7 +65,11 @@ async def unpin_all_cmd(client: Client, message):
 async def antichannelpin_cmd(client: Client, message):
     if len(message.command) == 1:
         state = get_chat_setting(message.chat.id, "antichannelpin", "off")
-        await message.reply(f"📡 Anti-channel pin is currently `{state}`.", parse_mode="markdown")
+        safe_state = escape_markdown(state)
+        await message.reply(
+            f"📡 Anti-channel pin is currently `{safe_state}`.",
+            parse_mode="markdown",
+        )
         return
 
     value = message.command[1].lower()
@@ -73,7 +78,10 @@ async def antichannelpin_cmd(client: Client, message):
         return
 
     set_chat_setting(message.chat.id, "antichannelpin", value)
-    await message.reply(f"📡 Anti-channel pin set to `{value}`.", parse_mode="markdown")
+    safe_val = escape_markdown(value)
+    await message.reply(
+        f"📡 Anti-channel pin set to `{safe_val}`.", parse_mode="markdown"
+    )
 
 
 # Enable or disable clean linked messages (auto-delete 'linked to this message' messages)
@@ -81,7 +89,10 @@ async def antichannelpin_cmd(client: Client, message):
 async def cleanlinked_cmd(client: Client, message):
     if len(message.command) == 1:
         state = get_chat_setting(message.chat.id, "cleanlinked", "off")
-        await message.reply(f"🧼 Clean linked messages is `{state}`.", parse_mode="markdown")
+        safe_state = escape_markdown(state)
+        await message.reply(
+            f"🧼 Clean linked messages is `{safe_state}`.", parse_mode="markdown"
+        )
         return
 
     value = message.command[1].lower()
@@ -90,7 +101,10 @@ async def cleanlinked_cmd(client: Client, message):
         return
 
     set_chat_setting(message.chat.id, "cleanlinked", value)
-    await message.reply(f"🧼 Clean linked messages set to `{value}`.", parse_mode="markdown")
+    safe_val = escape_markdown(value)
+    await message.reply(
+        f"🧼 Clean linked messages set to `{safe_val}`.", parse_mode="markdown"
+    )
 
 
 # Register all command handlers

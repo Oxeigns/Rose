@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from utils.markdown import escape_markdown
 from utils.decorators import admin_required
 
 # In-memory storage (replace with DB later)
@@ -22,7 +23,10 @@ async def create_fed(client: Client, message: Message):
     user_id = message.from_user.id
     FEDERATIONS[fed_name] = {"owner": user_id, "banned_users": set()}
     USER_TO_FEDS.setdefault(user_id, set()).add(fed_name)
-    await message.reply_text(f"✅ Federation `{fed_name}` has been created.", parse_mode="markdown")
+    safe = escape_markdown(fed_name)
+    await message.reply_text(
+        f"✅ Federation `{safe}` has been created.", parse_mode="markdown"
+    )
 
 
 @Client.on_message(filters.command("joinfed") & filters.group)
@@ -38,7 +42,10 @@ async def join_fed(client: Client, message: Message):
         return
 
     GROUP_TO_FED[message.chat.id] = fed_name
-    await message.reply_text(f"✅ This group has joined the `{fed_name}` federation.", parse_mode="markdown")
+    safe = escape_markdown(fed_name)
+    await message.reply_text(
+        f"✅ This group has joined the `{safe}` federation.", parse_mode="markdown"
+    )
 
 
 @Client.on_message(filters.command("leavefed") & filters.group)
@@ -49,7 +56,10 @@ async def leave_fed(client: Client, message: Message):
         return
 
     fed_name = GROUP_TO_FED.pop(message.chat.id)
-    await message.reply_text(f"🚪 Group left the `{fed_name}` federation.", parse_mode="markdown")
+    safe = escape_markdown(fed_name)
+    await message.reply_text(
+        f"🚪 Group left the `{safe}` federation.", parse_mode="markdown"
+    )
 
 
 @Client.on_message(filters.command("federations"))
@@ -82,7 +92,10 @@ async def fed_ban(client: Client, message: Message):
 
     user_id = message.reply_to_message.from_user.id
     FEDERATIONS[fed_name]["banned_users"].add(user_id)
-    await message.reply_text(f"🚫 User `{user_id}` has been FedBanned in `{fed_name}`.", parse_mode="markdown")
+    safe = escape_markdown(fed_name)
+    await message.reply_text(
+        f"🚫 User `{user_id}` has been FedBanned in `{safe}`.", parse_mode="markdown"
+    )
 
 
 @Client.on_message(filters.command("fedunban") & filters.group)
@@ -100,7 +113,10 @@ async def fed_unban(client: Client, message: Message):
 
     user_id = message.reply_to_message.from_user.id
     FEDERATIONS[fed_name]["banned_users"].discard(user_id)
-    await message.reply_text(f"✅ User `{user_id}` has been FedUnbanned in `{fed_name}`.", parse_mode="markdown")
+    safe = escape_markdown(fed_name)
+    await message.reply_text(
+        f"✅ User `{user_id}` has been FedUnbanned in `{safe}`.", parse_mode="markdown"
+    )
 
 
 @Client.on_message(filters.new_chat_members)

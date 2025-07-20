@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
+from utils.markdown import escape_markdown
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from buttons.filters import filters_panel
 from utils.decorators import is_admin
@@ -16,7 +17,10 @@ async def add_filter_cmd(client: Client, message: Message):
     response = " ".join(message.command[2:])
 
     add_filter(message.chat.id, keyword, response)
-    await message.reply_text(f"✅ Filter `\"{keyword}\"` added.", parse_mode="markdown")
+    safe_key = escape_markdown(keyword)
+    await message.reply_text(
+        f"✅ Filter `\"{safe_key}\"` added.", parse_mode="markdown"
+    )
 
 
 @is_admin
@@ -27,7 +31,10 @@ async def stop_filter_cmd(client: Client, message: Message):
 
     keyword = message.command[1].lower()
     remove_filter(message.chat.id, keyword)
-    await message.reply_text(f"🗑️ Removed filter `\"{keyword}\"`.", parse_mode="markdown")
+    safe_key = escape_markdown(keyword)
+    await message.reply_text(
+        f"🗑️ Removed filter `\"{safe_key}\"`.", parse_mode="markdown"
+    )
 
 
 async def list_filters_cmd(client: Client, message: Message):
