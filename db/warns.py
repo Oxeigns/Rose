@@ -19,10 +19,11 @@ async def ensure_table(db):
 async def add_warn(user_id: int, chat_id: int) -> int:
     async with aiosqlite.connect(DB_PATH) as db:
         await ensure_table(db)
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT warn_count FROM warns WHERE user_id=? AND chat_id=?",
             (user_id, chat_id)
         )
+        row = await cur.fetchone()
         count = (row[0] + 1) if row else 1
         if row:
             await db.execute(
@@ -40,10 +41,11 @@ async def add_warn(user_id: int, chat_id: int) -> int:
 async def get_warns(user_id: int, chat_id: int) -> int:
     async with aiosqlite.connect(DB_PATH) as db:
         await ensure_table(db)
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT warn_count FROM warns WHERE user_id=? AND chat_id=?",
             (user_id, chat_id)
         )
+        row = await cur.fetchone()
         return row[0] if row else 0
 
 async def reset_warns(user_id: int, chat_id: int) -> None:
@@ -58,10 +60,11 @@ async def reset_warns(user_id: int, chat_id: int) -> None:
 async def remove_warn(user_id: int, chat_id: int) -> int:
     async with aiosqlite.connect(DB_PATH) as db:
         await ensure_table(db)
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT warn_count FROM warns WHERE user_id=? AND chat_id=?",
             (user_id, chat_id)
         )
+        row = await cur.fetchone()
         if not row:
             return 0
         count = max(row[0] - 1, 0)

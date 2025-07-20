@@ -101,10 +101,11 @@ def get_conn():
 
 async def get_setting(chat_id: int, key: str, default=None):
     async with aiosqlite.connect(DB_PATH) as db:
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT value FROM settings WHERE chat_id=? AND key=?",
             (chat_id, key),
         )
+        row = await cur.fetchone()
         return row[0] if row else default
 
 
@@ -113,10 +114,11 @@ async def increment_warning(chat_id: int, user_id: int) -> int:
         await db.execute(
             "CREATE TABLE IF NOT EXISTS warnings (chat_id INTEGER, user_id INTEGER, count INTEGER DEFAULT 0, PRIMARY KEY(chat_id, user_id))"
         )
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT count FROM warnings WHERE chat_id=? AND user_id=?",
             (chat_id, user_id),
         )
+        row = await cur.fetchone()
         count = row[0] + 1 if row else 1
         await db.execute(
             "REPLACE INTO warnings(chat_id, user_id, count) VALUES (?,?,?)",
@@ -140,10 +142,11 @@ async def is_approved(chat_id: int, user_id: int) -> bool:
         await db.execute(
             "CREATE TABLE IF NOT EXISTS approvals (chat_id INTEGER, user_id INTEGER, PRIMARY KEY(chat_id, user_id))"
         )
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT 1 FROM approvals WHERE chat_id=? AND user_id=?",
             (chat_id, user_id),
         )
+        row = await cur.fetchone()
         return bool(row)
 
 

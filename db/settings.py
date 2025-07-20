@@ -18,8 +18,9 @@ async def set_chat_setting(chat_id: int, key: str, value: str | None) -> None:
 
 async def get_chat_setting(chat_id: int, key: str, default=None):
     async with aiosqlite.connect(DB_PATH) as db:
-        row = await db.execute_fetchone(
+        cur = await db.execute(
             "SELECT value FROM settings WHERE chat_id=? AND key=?",
             (chat_id, key),
         )
+        row = await cur.fetchone()
         return row[0] if row else default
