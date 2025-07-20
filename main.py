@@ -1,10 +1,12 @@
 """Main entry point for the Telegram bot."""
 
+import asyncio
 import logging
 import os
 from pyrogram import Client
 
 from handlers import register_all
+from db import init_db
 
 
 logging.basicConfig(
@@ -27,10 +29,12 @@ def main() -> None:
     """Load handlers and start the bot."""
 
     try:
+        LOGGER.info("Initialising database ...")
+        asyncio.run(init_db())
         LOGGER.info("Loading handlers ...")
         register_all(app)
     except Exception:
-        LOGGER.exception("Failed to load handlers")
+        LOGGER.exception("Failed to initialise bot")
         return
 
     LOGGER.info("Starting bot ...")

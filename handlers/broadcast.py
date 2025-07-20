@@ -9,7 +9,7 @@ from pyrogram.errors import (
 )
 
 from config import OWNER_ID
-from utils.db import get_broadcast_groups, get_broadcast_users
+from db.broadcast import get_broadcast_groups, get_broadcast_users
 from utils.errors import catch_errors
 
 logger = logging.getLogger(__name__)
