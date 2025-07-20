@@ -30,7 +30,7 @@ async def show_greetings(client: Client, message: Message):
     welcome = get_chat_setting(message.chat.id, "welcome", "Not set.")
     goodbye = get_chat_setting(message.chat.id, "goodbye", "Not set.")
 
-    msg = f"**👋 Greetings Settings:**\n"
+    msg = "**👋 Greetings Settings:**\n"
     msg += f"• **Welcome:** `{welcome}`\n"
     msg += f"• **Goodbye:** `{goodbye}`"
     await message.reply_text(msg, parse_mode="markdown")

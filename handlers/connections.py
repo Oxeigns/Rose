@@ -1,6 +1,5 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from utils.db import set_chat_setting, get_chat_setting
 from utils.decorators import admin_required
 
 # Temporary in-memory map (user_id: chat_id)
@@ -13,7 +12,7 @@ async def connect_group(client: Client, message: Message):
     chat_id = message.chat.id
 
     CONNECTIONS[user_id] = chat_id
-    await message.reply_text(f"🔗 Group connected! You can now use group commands in private chat.")
+    await message.reply_text("🔗 Group connected! You can now use group commands in private chat.")
 
 @Client.on_message(filters.command("disconnect") & filters.group)
 @admin_required
