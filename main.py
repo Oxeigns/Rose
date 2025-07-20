@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 from pyrogram import Client
+from dotenv import load_dotenv
 
 from handlers import register_all
 from db import init_db
@@ -14,6 +15,9 @@ logging.basicConfig(
     level=logging.INFO,
 )
 LOGGER = logging.getLogger(__name__)
+
+# Load variables from .env if present
+load_dotenv()
 
 # Bot configuration with environment overrides
 API_ID = int(os.environ.get("API_ID", "123456"))

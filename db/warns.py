@@ -1,7 +1,7 @@
 import time
 import aiosqlite
 
-DB_PATH = "rose.db"
+DB_PATH = "bot.db"
 
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS warns (
