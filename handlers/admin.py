@@ -113,11 +113,28 @@ async def admin_cb(client: Client, query: CallbackQuery):
     await query.answer()
 
 def register(app: Client):
-    app.add_handler(filters.command("promote") & filters.group, promote)
-    app.add_handler(filters.command("demote") & filters.group, demote)
-    app.add_handler(filters.command("adminlist") & filters.group, adminlist)
-    app.add_handler(filters.command("admincache") & filters.group, admincache)
-    app.add_handler(filters.command("anonadmin") & filters.group, anonadmin)
-    app.add_handler(filters.command("adminerror") & filters.group, adminerror)
-    app.add_handler(filters.command("admin") & filters.group, admin_menu)
-    app.add_handler(CallbackQueryHandler(admin_cb, filters.regex(r"^admin:(?!open$).+")))
+    """Register all admin-related command handlers."""
+    app.add_handler(
+        MessageHandler(promote, filters.command("promote") & filters.group)
+    )
+    app.add_handler(
+        MessageHandler(demote, filters.command("demote") & filters.group)
+    )
+    app.add_handler(
+        MessageHandler(adminlist, filters.command("adminlist") & filters.group)
+    )
+    app.add_handler(
+        MessageHandler(admincache, filters.command("admincache") & filters.group)
+    )
+    app.add_handler(
+        MessageHandler(anonadmin, filters.command("anonadmin") & filters.group)
+    )
+    app.add_handler(
+        MessageHandler(adminerror, filters.command("adminerror") & filters.group)
+    )
+    app.add_handler(
+        MessageHandler(admin_menu, filters.command("admin") & filters.group)
+    )
+    app.add_handler(
+        CallbackQueryHandler(admin_cb, filters.regex(r"^admin:(?!open$).+"))
+    )
