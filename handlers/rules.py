@@ -1,10 +1,10 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-@Client.on_message(filters.command('rules') & (filters.group | filters.private))
 async def rules_cmd(client, message):
     rules = get_chat_setting(message.chat.id if message.chat.type != 'private' else message.from_user.id, 'rules_text', 'No rules set.')
     button = get_chat_setting(message.chat.id if message.chat.type != 'private' else message.from_user.id, 'rules_button')
@@ -18,7 +18,6 @@ async def rules_cmd(client, message):
     await message.reply(rules, reply_markup=markup, disable_web_page_preview=True)
 
 
-@Client.on_message(filters.command('setrules') & filters.group)
 @admin_required
 async def setrules_cmd(client, message):
     if len(message.command) < 2 and not message.reply_to_message:
@@ -29,7 +28,6 @@ async def setrules_cmd(client, message):
     await message.reply('Rules updated.')
 
 
-@Client.on_message(filters.command('privaterules') & filters.group)
 @admin_required
 async def private_rules_cmd(client, message):
     current = get_chat_setting(message.chat.id, 'privaterules', 'off')
@@ -38,14 +36,12 @@ async def private_rules_cmd(client, message):
     await message.reply(f'Private rules toggled to {new}.')
 
 
-@Client.on_message(filters.command('resetrules') & filters.group)
 @admin_required
 async def reset_rules_cmd(client, message):
     set_chat_setting(message.chat.id, 'rules_text', None)
     await message.reply('Rules cleared.')
 
 
-@Client.on_message(filters.command('setrulesbutton') & filters.group)
 @admin_required
 async def set_rules_button(client, message):
     if len(message.command) < 2:
@@ -55,14 +51,12 @@ async def set_rules_button(client, message):
     await message.reply('Rules button updated.')
 
 
-@Client.on_message(filters.command('resetrulesbutton') & filters.group)
 @admin_required
 async def reset_rules_button(client, message):
     set_chat_setting(message.chat.id, 'rules_button', None)
     await message.reply('Rules button reset.')
 
 
-@Client.on_callback_query(filters.regex('^rules:back'))
 async def rules_back(client, query):
     rules = get_chat_setting(query.message.chat.id, 'rules_text', 'No rules set.')
     await query.message.edit(rules)
@@ -70,4 +64,10 @@ async def rules_back(client, query):
 
 
 def register(app: Client):
-    pass
+    app.add_handler(MessageHandler(rules_cmd, filters.command('rules') & (filters.group | filters.private)))
+    app.add_handler(MessageHandler(setrules_cmd, filters.command('setrules') & filters.group))
+    app.add_handler(MessageHandler(private_rules_cmd, filters.command('privaterules') & filters.group))
+    app.add_handler(MessageHandler(reset_rules_cmd, filters.command('resetrules') & filters.group))
+    app.add_handler(MessageHandler(set_rules_button, filters.command('setrulesbutton') & filters.group))
+    app.add_handler(MessageHandler(reset_rules_button, filters.command('resetrulesbutton') & filters.group))
+    app.add_handler(CallbackQueryHandler(rules_back, filters.regex('^rules:back')))

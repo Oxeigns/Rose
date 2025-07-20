@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from utils.decorators import admin_required
@@ -15,7 +16,6 @@ def _get_note(chat_id: int, name: str):
     return row[0] if row else None
 
 
-@Client.on_message(filters.command('save') & filters.group)
 @admin_required
 async def save_note(client, message):
     if len(message.command) < 2:
@@ -35,7 +35,6 @@ async def save_note(client, message):
     await message.reply('Saved note.')
 
 
-@Client.on_message(filters.command('clear') & filters.group)
 @admin_required
 async def clear_note(client, message):
     if len(message.command) < 2:
@@ -48,7 +47,6 @@ async def clear_note(client, message):
     await message.reply('Note deleted.')
 
 
-@Client.on_message(filters.command(['notes', 'saved']) & filters.group)
 async def list_notes(client, message):
     cur = conn.cursor()
     cur.execute('SELECT name FROM notes WHERE chat_id=? ORDER BY name', (message.chat.id,))
@@ -60,7 +58,6 @@ async def list_notes(client, message):
         await message.reply(text, reply_markup=notes_panel())
 
 
-@Client.on_message(filters.command('clearall') & filters.group)
 @admin_required
 async def clear_all_notes(client, message):
     cur = conn.cursor()
@@ -69,7 +66,6 @@ async def clear_all_notes(client, message):
     await message.reply('All notes cleared.')
 
 
-@Client.on_message(filters.command('privatenotes') & filters.group)
 @admin_required
 async def private_notes_toggle(client, message):
     current = get_chat_setting(message.chat.id, 'privatenotes', 'off')
@@ -78,7 +74,6 @@ async def private_notes_toggle(client, message):
     await message.reply(f'Private notes are now {new}.')
 
 
-@Client.on_message(filters.command('get') & filters.group)
 async def get_note_cmd(client, message):
     if len(message.command) < 2:
         await message.reply('Usage: /get <name>')
@@ -95,7 +90,6 @@ async def get_note_cmd(client, message):
         await message.reply('Note not found.')
 
 
-@Client.on_message(filters.text & filters.group)
 async def get_note_hash(client, message):
     if not message.text or not message.text.startswith('#'):
         return
@@ -108,7 +102,6 @@ async def get_note_hash(client, message):
             await message.reply(content)
 
 
-@Client.on_callback_query(filters.regex('^notes:'))
 async def notes_cb(client, query):
     data = query.data.split(':')[1]
     if data == 'example':
@@ -119,4 +112,11 @@ async def notes_cb(client, query):
 
 
 def register(app: Client):
-    pass
+    app.add_handler(MessageHandler(save_note, filters.command('save') & filters.group))
+    app.add_handler(MessageHandler(clear_note, filters.command('clear') & filters.group))
+    app.add_handler(MessageHandler(list_notes, filters.command(['notes', 'saved']) & filters.group))
+    app.add_handler(MessageHandler(clear_all_notes, filters.command('clearall') & filters.group))
+    app.add_handler(MessageHandler(private_notes_toggle, filters.command('privatenotes') & filters.group))
+    app.add_handler(MessageHandler(get_note_cmd, filters.command('get') & filters.group))
+    app.add_handler(MessageHandler(get_note_hash, filters.text & filters.group))
+    app.add_handler(CallbackQueryHandler(notes_cb, filters.regex('^notes:')))

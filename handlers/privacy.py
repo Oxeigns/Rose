@@ -1,7 +1,7 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler
 
 
-@Client.on_message(filters.command('privacy'))
 async def privacy_cmd(client, message):
     text = 'We only store data necessary for moderation. Use /delmydata to remove your info.'
     if message.chat.type != 'private':
@@ -12,4 +12,4 @@ async def privacy_cmd(client, message):
 
 
 def register(app: Client):
-    pass
+    app.add_handler(MessageHandler(privacy_cmd, filters.command('privacy')))
