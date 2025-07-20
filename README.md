@@ -13,6 +13,8 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
    pip install -r requirements.txt
    ```
 2. Copy `.env.example` to `.env` and fill in your credentials.
+   Optionally set `LOG_GROUP_ID` to a Telegram group or channel ID to
+   receive startup and crash logs.
 3. Start the bot:
    ```bash
    python main.py
