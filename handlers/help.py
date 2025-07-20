@@ -2,19 +2,66 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
+# Individual command descriptions for the help panel
 HELP_MODULES = {
-    "notes": "📝 **Notes**\nSave notes with `/save`, retrieve with `/get` or `#tag`, list all using `/notes`. Use `/clear` or `/clearall` to delete.",
-    "purge": "🧹 **Purge**\nUse `/purge` to delete replied messages, `/purgefrom`, `/purgeto`, `/spurge`, or `/del` to clean ranges.",
-    "pin": "📌 **Pin**\nUse `/pin`, `/unpin`, `/unpinall`, view `/pinned`. Tools: `/permapin`, `/antichannelpin`, `/cleanlinked`.",
-    "topics": "💬 **Topics**\nManage forums: `/newtopic`, `/renametopic`, `/closetopic`, `/reopentopic`, `/deletetopic`, `/actiontopic`, `/setactiontopic`.",
-    "warnings": "⚠️ **Warnings**\nWarn with `/warn`, remove with `/rmwarn` or `/resetwarn`. Configure: `/warnlimit`, `/warnmode`, `/warntime`.",
-    "rules": "📜 **Rules**\nSet with `/setrules`, send button via `/setrulesbutton`. Use `/privaterules` to toggle PM mode.",
-    "misc": "✨ **Misc**\n`/id`, `/info`, `/limits`, `/runs`, `/donate`, `/markdownhelp`, `/privacy`.",
-    "locks": "🔒 **Locks**\nRestrict features via `/lock` or `/unlock`. Prevent spam, unwanted content, and more.",
-    # Future extensions:
-    "linkfilter": "🔗 **Link Filter**\n(Coming Soon) Block harmful or unwanted links using `/linkfilter` settings.",
-    "biolink": "🧬 **Bio Link Filter**\n(Coming Soon) Detect unwanted links in user bios and take action.",
-    "autodelete": "⏱️ **Auto Delete**\n(Coming Soon) Automatically delete messages after configured delay using `/cleancommand`.",
+    "help": "Display this help message with inline buttons.",
+    "id": "Get the ID of yourself or the replied user.",
+    "info": "Show detailed information about a user.",
+    "donate": "Display the donation link.",
+    "markdownhelp": "Send a short guide about Markdown formatting.",
+    "limits": "Show current bot limitations.",
+    "runs": "Send a random running away message.",
+    "privacy": "Show the bot privacy policy.",
+
+    "save": "Save a note. Reply or use `/save name text`.",
+    "get": "Retrieve a note by name with `/get name` or `#name`.",
+    "clear": "Delete a note by name.",
+    "clearall": "Delete all notes in the chat.",
+    "notes": "List all saved notes.",
+    "privatenotes": "Toggle sending notes in PM instead of chat.",
+
+    "purge": "Delete a range of messages starting from the reply.",
+    "spurge": "Silently purge without a confirmation message.",
+    "purgefrom": "Mark the beginning of a purge range.",
+    "purgeto": "Purge messages from the marked point up to here.",
+    "del": "Delete the replied message along with the command message.",
+
+    "pin": "Pin a replied message (add 'loud' to notify).",
+    "unpin": "Unpin the replied message or last pinned message.",
+    "unpinall": "Unpin all pinned messages in the chat.",
+    "permapin": "Send a message and pin it permanently.",
+    "pinned": "Show the currently pinned message.",
+    "antichannelpin": "Enable or disable auto-deleting channel pins.",
+    "cleanlinked": "Enable or disable deleting 'linked to this message' notes.",
+
+    "newtopic": "Create a new forum topic in groups with topics enabled.",
+    "renametopic": "Rename the current forum topic.",
+    "closetopic": "Close the current topic so users can't reply.",
+    "reopentopic": "Reopen a closed topic.",
+    "deletetopic": "Delete the current topic completely.",
+    "actiontopic": "Show the current action logging topic ID.",
+    "setactiontopic": "Set the action logging topic by reply or ID.",
+
+    "warn": "Warn a user. After the limit a punishment is applied.",
+    "dwarn": "Delete the replied message and warn the user.",
+    "swarn": "Silently warn and delete the user's message.",
+    "resetwarn": "Reset warnings for the replied user.",
+    "rmwarn": "Remove one warning from the replied user.",
+    "warns": "Show the number of warnings for a user.",
+    "resetallwarns": "Reset all warnings in this chat.",
+    "warnlimit": "Set how many warnings are allowed before action.",
+    "warnmode": "Set punishment type when warn limit is reached.",
+    "warntime": "Set how long the punishment lasts in seconds.",
+    "warnings": "Display the current warning configuration.",
+
+    "rules": "Show the group rules.",
+    "setrules": "Set the group rules via text or reply.",
+    "resetrules": "Remove the stored rules.",
+    "setrulesbutton": "Set the label for the rules button under /rules.",
+    "resetrulesbutton": "Remove the rules button label.",
+    "privaterules": "Toggle sending rules in PM instead of chat.",
+
+    "lock": "Lock a certain type of messages or actions in the chat.",
 }
 
 # Dynamic help menu builder
