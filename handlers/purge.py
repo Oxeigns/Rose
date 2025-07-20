@@ -1,10 +1,10 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 
 purge_points = {}
 
 
-@Client.on_message(filters.command('purge') & filters.group)
 @admin_required
 async def purge_cmd(client, message):
     if not message.reply_to_message:
@@ -23,7 +23,6 @@ async def purge_cmd(client, message):
     await message.reply(f'Deleted {len(ids)} messages.', quote=False)
 
 
-@Client.on_message(filters.command('spurge') & filters.group)
 @admin_required
 async def spurge_cmd(client, message):
     if not message.reply_to_message:
@@ -32,14 +31,12 @@ async def spurge_cmd(client, message):
     await client.delete_messages(message.chat.id, ids)
 
 
-@Client.on_message(filters.command('del') & filters.group)
 @admin_required
 async def del_cmd(client, message):
     if message.reply_to_message:
         await client.delete_messages(message.chat.id, [message.reply_to_message.id, message.id])
 
 
-@Client.on_message(filters.command('purgefrom') & filters.group)
 @admin_required
 async def purge_from_cmd(client, message):
     if not message.reply_to_message:
@@ -49,7 +46,6 @@ async def purge_from_cmd(client, message):
     await message.reply('Purge from point saved.')
 
 
-@Client.on_message(filters.command('purgeto') & filters.group)
 @admin_required
 async def purge_to_cmd(client, message):
     start = purge_points.get(message.chat.id)
@@ -63,4 +59,8 @@ async def purge_to_cmd(client, message):
 
 
 def register(app: Client):
-    pass
+    app.add_handler(MessageHandler(purge_cmd, filters.command('purge') & filters.group))
+    app.add_handler(MessageHandler(spurge_cmd, filters.command('spurge') & filters.group))
+    app.add_handler(MessageHandler(del_cmd, filters.command('del') & filters.group))
+    app.add_handler(MessageHandler(purge_from_cmd, filters.command('purgefrom') & filters.group))
+    app.add_handler(MessageHandler(purge_to_cmd, filters.command('purgeto') & filters.group))

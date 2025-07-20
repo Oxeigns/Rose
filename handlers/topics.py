@@ -1,9 +1,9 @@
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 
 
-@Client.on_message(filters.command('actiontopic') & filters.group)
 async def action_topic(client, message):
     topic = get_chat_setting(message.chat.id, 'action_topic')
     if topic:
@@ -12,7 +12,6 @@ async def action_topic(client, message):
         await message.reply('No action topic set.')
 
 
-@Client.on_message(filters.command('setactiontopic') & filters.group)
 @admin_required
 async def set_action_topic(client, message):
     if message.reply_to_message:
@@ -26,7 +25,6 @@ async def set_action_topic(client, message):
     await message.reply('Action topic updated.')
 
 
-@Client.on_message(filters.command('newtopic') & filters.group)
 @admin_required
 async def new_topic(client, message):
     if len(message.command) < 2:
@@ -36,7 +34,6 @@ async def new_topic(client, message):
     await message.reply(f'Topic created with id {topic.message_thread_id}.')
 
 
-@Client.on_message(filters.command('renametopic') & filters.group)
 @admin_required
 async def rename_topic(client, message):
     if len(message.command) < 2:
@@ -50,7 +47,6 @@ async def rename_topic(client, message):
     await message.reply('Topic renamed.')
 
 
-@Client.on_message(filters.command('closetopic') & filters.group)
 @admin_required
 async def close_topic(client, message):
     topic_id = message.reply_to_message.message_thread_id if message.reply_to_message else message.message_thread_id
@@ -61,7 +57,6 @@ async def close_topic(client, message):
     await message.reply('Topic closed.')
 
 
-@Client.on_message(filters.command('reopentopic') & filters.group)
 @admin_required
 async def reopen_topic(client, message):
     topic_id = message.reply_to_message.message_thread_id if message.reply_to_message else message.message_thread_id
@@ -72,7 +67,6 @@ async def reopen_topic(client, message):
     await message.reply('Topic reopened.')
 
 
-@Client.on_message(filters.command('deletetopic') & filters.group)
 @admin_required
 async def delete_topic(client, message):
     topic_id = message.reply_to_message.message_thread_id if message.reply_to_message else message.message_thread_id
@@ -84,4 +78,10 @@ async def delete_topic(client, message):
 
 
 def register(app: Client):
-    pass
+    app.add_handler(MessageHandler(action_topic, filters.command('actiontopic') & filters.group))
+    app.add_handler(MessageHandler(set_action_topic, filters.command('setactiontopic') & filters.group))
+    app.add_handler(MessageHandler(new_topic, filters.command('newtopic') & filters.group))
+    app.add_handler(MessageHandler(rename_topic, filters.command('renametopic') & filters.group))
+    app.add_handler(MessageHandler(close_topic, filters.command('closetopic') & filters.group))
+    app.add_handler(MessageHandler(reopen_topic, filters.command('reopentopic') & filters.group))
+    app.add_handler(MessageHandler(delete_topic, filters.command('deletetopic') & filters.group))

@@ -1,4 +1,5 @@
 from pyrogram import Client, filters, types
+from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 
 LOCK_MAP = {
@@ -9,7 +10,6 @@ LOCK_MAP = {
 }
 
 
-@Client.on_message(filters.command('lock') & filters.group)
 @admin_required
 async def lock_cmd(client, message):
     if len(message.command) < 2:
@@ -25,7 +25,6 @@ async def lock_cmd(client, message):
     await message.reply(f'Locked {lock_type}.')
 
 
-@Client.on_message(filters.command('unlock') & filters.group)
 @admin_required
 async def unlock_cmd(client, message):
     if len(message.command) < 2:
@@ -42,4 +41,5 @@ async def unlock_cmd(client, message):
 
 
 def register(app: Client):
-    pass
+    app.add_handler(MessageHandler(lock_cmd, filters.command('lock') & filters.group))
+    app.add_handler(MessageHandler(unlock_cmd, filters.command('unlock') & filters.group))
