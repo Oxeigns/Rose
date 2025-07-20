@@ -10,4 +10,5 @@ def approvals_panel() -> InlineKeyboardMarkup:
         ],
         [InlineKeyboardButton("📋 List", callback_data="approvals:list")],
         [InlineKeyboardButton("⬅️ Back", callback_data="main:menu")],
+        [InlineKeyboardButton("❌ Close", callback_data="main:close")],
     ])

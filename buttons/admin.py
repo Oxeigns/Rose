@@ -17,4 +17,5 @@ def admin_panel() -> InlineKeyboardMarkup:
         ],
         [InlineKeyboardButton("👥 Admins", callback_data="admin:list")],
         [InlineKeyboardButton("⬅️ Back", callback_data="main:menu")],
+        [InlineKeyboardButton("❌ Close", callback_data="main:close")],
     ])
