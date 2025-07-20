@@ -1,6 +1,7 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
-from pyrogram.handlers import MessageHandler
+from pyrogram.types import Message, CallbackQuery
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from buttons.filters import filters_panel
 from utils.decorators import is_admin
 from utils.db import add_filter, remove_filter, list_filters, get_filter, clear_filters
 
@@ -57,9 +58,24 @@ async def filter_worker(client: Client, message: Message):
             break
 
 
+# Inline button callbacks for the Filters panel
+async def filters_cb(client: Client, query: CallbackQuery):
+    data = query.data.split(":")[1]
+    if data == "add":
+        text = "Use /filter word response to add a filter."
+    elif data == "remove":
+        text = "Use /stop word to remove a filter."
+    elif data == "list":
+        text = "Use /filters to list all filters."
+    else:
+        text = "Unknown command."
+    await query.message.edit_text(text, reply_markup=filters_panel(), parse_mode="markdown")
+    await query.answer()
+
 def register(app: Client):
     app.add_handler(MessageHandler(add_filter_cmd, filters.command("filter") & filters.group))
     app.add_handler(MessageHandler(stop_filter_cmd, filters.command("stop") & filters.group))
     app.add_handler(MessageHandler(list_filters_cmd, filters.command("filters") & filters.group))
     app.add_handler(MessageHandler(stopall_cmd, filters.command("stopall") & filters.group))
     app.add_handler(MessageHandler(filter_worker, filters.text & filters.group), group=1)
+    app.add_handler(CallbackQueryHandler(filters_cb, filters.regex(r"^filters:(?!open$).+")))

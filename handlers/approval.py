@@ -1,5 +1,7 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, CallbackQuery
+from pyrogram.handlers import CallbackQueryHandler
+from buttons.approvals import approvals_panel
 from utils.decorators import admin_required
 
 # Temporary in-memory store (use DB in production)
@@ -56,3 +58,19 @@ async def clear_approved(client: Client, message: Message):
     chat_id = message.chat.id
     APPROVED_USERS[chat_id] = set()
     await message.reply_text("✅ All approved users have been cleared.")
+
+
+# Callback handler for approvals panel
+@Client.on_callback_query(filters.regex(r"^approvals:(?!open$).+"))
+async def approvals_cb(client: Client, query: CallbackQuery):
+    data = query.data.split(":")[1]
+    if data == "approve":
+        text = "Reply with /approve to approve a user."
+    elif data == "unapprove":
+        text = "Reply with /unapprove to revoke approval."
+    elif data == "list":
+        text = "Use /approved to list approved users."
+    else:
+        text = "Unknown command."
+    await query.message.edit_text(text, reply_markup=approvals_panel(), parse_mode="markdown")
+    await query.answer()

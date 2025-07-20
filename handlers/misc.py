@@ -11,39 +11,66 @@ MODULE_BUTTONS = [
     ("⚠️ Warnings", "warnings:open"),
     ("✅ Approvals", "approvals:open"),
     ("🔒 Lock", "lock:open"),
+    ("📝 Notes", "notes:open"),
 ]
+
+
+def build_menu() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
+    )
+
+from buttons import (
+    admin_panel,
+    filters_panel,
+    rules_panel,
+    warnings_panel,
+    approvals_panel,
+    lock_panel,
+    notes_panel,
+)
+
+MODULE_PANELS = {
+    "admin": admin_panel,
+    "filters": filters_panel,
+    "rules": rules_panel,
+    "warnings": warnings_panel,
+    "approvals": approvals_panel,
+    "lock": lock_panel,
+    "notes": notes_panel,
+}
 
 # Start command
 async def start(client: Client, message: Message):
     await message.reply_text(
-        "**🌹 Rose Bot**\nI help moderate and protect your group.\nUse /menu to view control panel.",
+        "**🌹 Rose Bot**\nI help moderate and protect your group.",
+        reply_markup=build_menu(),
         quote=True,
     )
 
 # Menu control panel
 async def menu(client: Client, message: Message):
-    markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
-    )
-    await message.reply_text("**📋 Control Panel**", reply_markup=markup, quote=True)
+    await message.reply_text("**📋 Control Panel**", reply_markup=build_menu(), quote=True)
 
 # Panel open handler
 async def panel_open(client: Client, query: CallbackQuery):
     module = query.data.split(":")[0]
+    panel_func = MODULE_PANELS.get(module)
+    markup = panel_func() if panel_func else InlineKeyboardMarkup(
+        [[InlineKeyboardButton("⬅️ Back", callback_data="main:menu")]]
+    )
     await query.message.edit_text(
         f"**🔧 {module.title()} Panel**",
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("⬅️ Back", callback_data="main:menu")]]
-        )
+        reply_markup=markup,
+        parse_mode="markdown",
     )
     await query.answer()
 
 # Back to main menu
 async def menu_cb(client: Client, query: CallbackQuery):
-    markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
+    await query.message.edit_text(
+        "**📋 Control Panel**", reply_markup=build_menu(), parse_mode="markdown"
     )
-    await query.message.edit_text("**📋 Control Panel**", reply_markup=markup)
     await query.answer()
 
 # Random run messages

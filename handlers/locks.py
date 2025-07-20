@@ -1,6 +1,8 @@
 from pyrogram import Client, filters, types
-from pyrogram.handlers import MessageHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
+from pyrogram.types import CallbackQuery
+from buttons.lock import lock_panel
 
 # Define supported lock types and their corresponding permission flags
 LOCK_MAP = {
@@ -92,6 +94,20 @@ async def unlock_cmd(client: Client, message: types.Message):
     await message.reply_text(f"🔓 Unlocked `{lock_type}`.", parse_mode="markdown")
 
 
+# Callbacks from lock panel
+async def lock_cb(client: Client, query: CallbackQuery):
+    data = query.data.split(":")[1]
+    if data == "lock":
+        text = "Use /lock <type> to lock something."
+    elif data == "unlock":
+        text = "Use /unlock <type> to unlock."
+    else:
+        text = "Unknown command."
+    await query.message.edit_text(text, reply_markup=lock_panel(), parse_mode="markdown")
+    await query.answer()
+
+
 def register(app: Client):
     app.add_handler(MessageHandler(lock_cmd, filters.command("lock") & filters.group))
     app.add_handler(MessageHandler(unlock_cmd, filters.command("unlock") & filters.group))
+    app.add_handler(CallbackQueryHandler(lock_cb, filters.regex(r"^lock:(?!open$).+")))

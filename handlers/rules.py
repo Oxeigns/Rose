@@ -2,7 +2,8 @@ from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from buttons.rules import rules_panel
 
 
 # /rules - shows rules in group or PM
@@ -76,6 +77,21 @@ async def rules_back(client, query):
     await query.answer()
 
 
+# Inline callbacks from rules panel
+async def rules_cb(client: Client, query: CallbackQuery):
+    data = query.data.split(":")[1]
+    if data == "view":
+        text = "Send /rules to view the current rules."
+    elif data == "set":
+        text = "Use /setrules or reply with the rules text and /setrules to set it."
+    elif data == "button":
+        text = "Use /setrulesbutton to set the rules button label."
+    else:
+        text = "Unknown command."
+    await query.message.edit_text(text, reply_markup=rules_panel(), parse_mode="markdown")
+    await query.answer()
+
+
 # Register handlers
 def register(app: Client):
     app.add_handler(MessageHandler(rules_cmd, filters.command('rules') & (filters.group | filters.private)))
@@ -85,3 +101,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(set_rules_button, filters.command('setrulesbutton') & filters.group))
     app.add_handler(MessageHandler(reset_rules_button, filters.command('resetrulesbutton') & filters.group))
     app.add_handler(CallbackQueryHandler(rules_back, filters.regex('^rules:back')))
+    app.add_handler(CallbackQueryHandler(rules_cb, filters.regex(r'^rules:(?!open$).+')))

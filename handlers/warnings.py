@@ -1,11 +1,13 @@
 import asyncio
 from pyrogram import Client, filters, types
-from pyrogram.handlers import MessageHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
 from db.warns import add_warn, get_warns, reset_warns, remove_warn
 import aiosqlite
 from db.warns import DB_PATH
+from pyrogram.types import CallbackQuery
+from buttons.warnings import warnings_panel
 
 
 DEFAULT_LIMIT = 3
@@ -168,6 +170,20 @@ async def warntime(client, message):
     except ValueError:
         await message.reply("❗ Enter duration in seconds.")
 
+# Callback buttons from warnings panel
+async def warnings_cb(client: Client, query: CallbackQuery):
+    data = query.data.split(":")[1]
+    if data == "warn":
+        text = "Reply with /warn to warn a user."
+    elif data == "limit":
+        text = "Use /warnlimit <num> to set warn limit."
+    elif data == "settings":
+        text = "Use /warnings to view current settings."
+    else:
+        text = "Unknown command."
+    await query.message.edit_text(text, reply_markup=warnings_panel(), parse_mode="markdown")
+    await query.answer()
+
 # Register all handlers
 def register(app):
     app.add_handler(MessageHandler(warn_user, filters.command('warn') & filters.group))
@@ -182,3 +198,4 @@ def register(app):
     app.add_handler(MessageHandler(warnmode, filters.command('warnmode') & filters.group))
     app.add_handler(MessageHandler(warntime, filters.command('warntime') & filters.group))
     app.add_handler(MessageHandler(warnings_settings, filters.command('warnings') & filters.group))
+    app.add_handler(CallbackQueryHandler(warnings_cb, filters.regex(r'^warnings:(?!open$).+')))

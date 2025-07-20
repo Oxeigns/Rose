@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, CallbackQuery
+from pyrogram.handlers import CallbackQueryHandler
 from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
 from buttons.admin import admin_panel
@@ -97,6 +98,20 @@ async def admin_menu(client: Client, message: Message):
         parse_mode="markdown",
     )
 
+# Callback buttons from the admin panel
+async def admin_cb(client: Client, query: CallbackQuery):
+    data = query.data.split(":")[1]
+    if data == "promote":
+        text = "Reply with /promote to give admin rights."
+    elif data == "demote":
+        text = "Reply with /demote to remove admin rights."
+    elif data == "list":
+        text = "Use /adminlist to see all admins."
+    else:
+        text = "Unknown command."
+    await query.message.edit_text(text, reply_markup=admin_panel(), parse_mode="markdown")
+    await query.answer()
+
 def register(app: Client):
     app.add_handler(filters.command("promote") & filters.group, promote)
     app.add_handler(filters.command("demote") & filters.group, demote)
@@ -105,3 +120,4 @@ def register(app: Client):
     app.add_handler(filters.command("anonadmin") & filters.group, anonadmin)
     app.add_handler(filters.command("adminerror") & filters.group, adminerror)
     app.add_handler(filters.command("admin") & filters.group, admin_menu)
+    app.add_handler(CallbackQueryHandler(admin_cb, filters.regex(r"^admin:(?!open$).+")))
