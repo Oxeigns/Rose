@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import os
-from pyrogram import Client
+from pyrogram import Client, idle
 from dotenv import load_dotenv
 
 from handlers import register_all
@@ -29,12 +29,12 @@ SESSION_NAME = os.environ.get("SESSION_NAME", "rose_bot")
 app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 
-def main() -> None:
+async def main() -> None:
     """Load handlers and start the bot."""
 
     try:
         LOGGER.info("Initialising database ...")
-        asyncio.run(init_db())
+        await init_db()
         LOGGER.info("Loading handlers ...")
         register_all(app)
     except Exception:
@@ -43,10 +43,13 @@ def main() -> None:
 
     LOGGER.info("Starting bot ...")
     try:
-        app.run()
+        await app.start()
+        await idle()
     except Exception:
         LOGGER.exception("Bot stopped due to an unexpected error")
+    finally:
+        await app.stop()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
