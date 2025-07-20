@@ -16,9 +16,19 @@ MODULE_BUTTONS = [
 
 
 def build_menu() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text, callback_data=cb)] for text, cb in MODULE_BUTTONS]
-    )
+    """Return the main control panel keyboard."""
+
+    keys = []
+    temp = []
+    for text, cb in MODULE_BUTTONS:
+        temp.append(InlineKeyboardButton(text, callback_data=cb))
+        if len(temp) == 2:
+            keys.append(temp)
+            temp = []
+    if temp:
+        keys.append(temp)
+    keys.append([InlineKeyboardButton("❌ Close", callback_data="main:close")])
+    return InlineKeyboardMarkup(keys)
 
 from buttons import (
     admin_panel,
@@ -71,6 +81,12 @@ async def menu_cb(client: Client, query: CallbackQuery):
     await query.message.edit_text(
         "**📋 Control Panel**", reply_markup=build_menu(), parse_mode="markdown"
     )
+    await query.answer()
+
+
+# Close the panel
+async def close_cb(client: Client, query: CallbackQuery):
+    await query.message.delete()
     await query.answer()
 
 # Random run messages
@@ -139,3 +155,4 @@ def register(app: Client):
 
     app.add_handler(CallbackQueryHandler(panel_open, filters.regex("^[a-z]+:open$")))
     app.add_handler(CallbackQueryHandler(menu_cb, filters.regex("^main:menu$")))
+    app.add_handler(CallbackQueryHandler(close_cb, filters.regex("^main:close$")))

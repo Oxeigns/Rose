@@ -14,7 +14,6 @@ def notes_panel() -> InlineKeyboardMarkup:
             InlineKeyboardButton("📌 Example usage", callback_data="notes:example"),
             InlineKeyboardButton("🖋 Formatting", callback_data="notes:format"),
         ],
-        [
-            InlineKeyboardButton("⬅️ Back", callback_data="main:menu")
-        ]
+        [InlineKeyboardButton("⬅️ Back", callback_data="main:menu")],
+        [InlineKeyboardButton("❌ Close", callback_data="main:close")]
     ])

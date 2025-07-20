@@ -10,4 +10,5 @@ def filters_panel() -> InlineKeyboardMarkup:
         ],
         [InlineKeyboardButton("📃 List", callback_data="filters:list")],
         [InlineKeyboardButton("⬅️ Back", callback_data="main:menu")],
+        [InlineKeyboardButton("❌ Close", callback_data="main:close")],
     ])

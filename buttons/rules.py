@@ -10,4 +10,5 @@ def rules_panel() -> InlineKeyboardMarkup:
         ],
         [InlineKeyboardButton("🔘 Button", callback_data="rules:button")],
         [InlineKeyboardButton("⬅️ Back", callback_data="main:menu")],
+        [InlineKeyboardButton("❌ Close", callback_data="main:close")],
     ])
