@@ -11,7 +11,7 @@ from utils.db import (
 @Client.on_message(filters.command("export") & filters.group)
 @admin_required
 async def export_data(client: Client, message: Message):
-    data = export_chat_data(message.chat.id)
+    data = await export_chat_data(message.chat.id)
 
     json_data = json.dumps(data, indent=2)
     await message.reply_document(
@@ -41,7 +41,7 @@ async def import_data(client: Client, message: Message):
         await message.reply(f"❌ Failed to parse JSON file:\n`{e}`", parse_mode="markdown")
         return
 
-    count = import_chat_data(message.chat.id, data)
+    count = await import_chat_data(message.chat.id, data)
     await message.reply(f"✅ Imported `{count}` items successfully.", parse_mode="markdown")
 
 
