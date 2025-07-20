@@ -1,49 +1,51 @@
 from pyrogram import Client, filters
+from pyrogram.types import Message
 from utils.decorators import admin_required
 from utils.db import get_chat_setting, set_chat_setting
 import asyncio
 
-
-@Client.on_message(filters.command('cleancommand') & filters.group)
+@Client.on_message(filters.command("cleancommand") & filters.group)
 @admin_required
-async def set_clean(client, message):
+async def set_clean(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply('Usage: /cleancommand <seconds|off>')
+        await message.reply_text("Usage: `/cleancommand <seconds|off>`", parse_mode="markdown")
         return
+
     arg = message.command[1].lower()
-    if arg in {'off', '0'}:
-        set_chat_setting(message.chat.id, 'clean_delay', '0')
-        await message.reply('Command cleaning disabled.')
+    if arg in {"off", "0"}:
+        set_chat_setting(message.chat.id, "clean_delay", "0")
+        await message.reply_text("🧹 Command auto-cleaning is now *disabled*.")
     else:
         try:
             delay = int(arg)
+            if delay < 1:
+                raise ValueError
         except ValueError:
-            await message.reply('Provide a number of seconds or "off".')
+            await message.reply_text("Please provide a number greater than 0 or use `off`.", parse_mode="markdown")
             return
-        set_chat_setting(message.chat.id, 'clean_delay', str(delay))
-        await message.reply(f'Commands will be deleted after {delay} seconds.')
 
+        set_chat_setting(message.chat.id, "clean_delay", str(delay))
+        await message.reply_text(f"🧼 Commands will be deleted after `{delay}` seconds.", parse_mode="markdown")
 
-@Client.on_message(filters.command('keepcommand') & filters.group)
+@Client.on_message(filters.command("keepcommand") & filters.group)
 @admin_required
-async def disable_clean(client, message):
-    set_chat_setting(message.chat.id, 'clean_delay', '0')
-    await message.reply('Command cleaning disabled.')
+async def keep_command(client: Client, message: Message):
+    set_chat_setting(message.chat.id, "clean_delay", "0")
+    await message.reply_text("✅ Command cleaning has been *turned off*.")
 
+# Cleaner for all commands, runs last (group=-1)
+@Client.on_message(filters.regex(r"^/") & (filters.group | filters.private), group=-1)
+async def auto_clean(client: Client, message: Message):
+    delay = get_chat_setting(message.chat.id, "clean_delay", "0")
 
-# Apply to all messages starting with a command prefix so they can be removed
-# after a delay. ``filters.command`` requires specifying commands explicitly,
-# so we use a regex filter matching the leading '/' instead.
-@Client.on_message(filters.regex(r'^/') & (filters.group | filters.private), group=-1)
-async def auto_clean(client, message):
-    delay = get_chat_setting(message.chat.id, 'clean_delay', '0')
     try:
         delay_int = int(delay)
     except (TypeError, ValueError):
         return
+
     if delay_int > 0:
         await asyncio.sleep(delay_int)
         try:
             await message.delete()
         except Exception:
-            pass
+            pass  # silently ignore delete failure
