@@ -11,6 +11,8 @@ HELP_MODULES = {
     "markdownhelp": "Send a short guide about Markdown formatting.",
     "limits": "Show current bot limitations.",
     "runs": "Send a random running away message.",
+    "ping": "Check bot responsiveness.",
+    "echo": "Echo back your text.",
     "privacy": "Show the bot privacy policy.",
 
     "save": "Save a note. Reply or use `/save name text`.",
@@ -62,6 +64,12 @@ HELP_MODULES = {
     "privaterules": "Toggle sending rules in PM instead of chat.",
 
     "lock": "Lock a certain type of messages or actions in the chat.",
+
+    "approve": "Approve a user to bypass restrictions.",
+    "unapprove": "Revoke a previously approved user.",
+    "approved": "List approved users in the chat.",
+    "clearapproved": "Clear all approved users.",
+    "approvalmode": "Toggle approval-only mode for regular users.",
 }
 
 # Dynamic help menu builder
