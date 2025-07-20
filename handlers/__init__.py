@@ -2,6 +2,7 @@
 
 import importlib
 import logging
+import inspect
 from pathlib import Path
 
 from pyrogram import Client
@@ -15,7 +16,7 @@ ALL_MODULES = [
     if not file.stem.startswith("_")
 ]
 
-def register_all(app: Client) -> None:
+async def register_all(app: Client) -> None:
     """Dynamically import all modules and register handlers if present."""
     for module_name in ALL_MODULES:
         try:
@@ -26,7 +27,11 @@ def register_all(app: Client) -> None:
 
         try:
             if hasattr(module, "register"):
-                module.register(app)
+                reg = getattr(module, "register")
+                if inspect.iscoroutinefunction(reg):
+                    await reg(app)
+                else:
+                    reg(app)
 
             # If using Pyrogram @Client.on_* decorators
             for attr in module.__dict__.values():
