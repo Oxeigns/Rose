@@ -1,4 +1,4 @@
-from pyrogram import Client, filters
+from pyrogram import Client, filters, StopPropagation
 from pyrogram.types import Message
 from utils.db import get_chat_setting, set_chat_setting
 from utils.decorators import admin_required
@@ -57,3 +57,4 @@ async def block_disabled(client: Client, message: Message):
             await message.delete()
         except Exception:
             pass
+        raise StopPropagation
