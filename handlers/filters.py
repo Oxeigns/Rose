@@ -84,5 +84,8 @@ def register(app: Client):
     app.add_handler(MessageHandler(stop_filter_cmd, filters.command("stop") & filters.group))
     app.add_handler(MessageHandler(list_filters_cmd, filters.command("filters") & filters.group))
     app.add_handler(MessageHandler(stopall_cmd, filters.command("stopall") & filters.group))
-    app.add_handler(MessageHandler(filter_worker, filters.text & filters.group), group=1)
+
+    handler = MessageHandler(filter_worker, filters.text & filters.group)
+    app.add_handler(handler, group=1)
+
     app.add_handler(CallbackQueryHandler(filters_cb, filters.regex(r"^filters:(?!open$).+")))
