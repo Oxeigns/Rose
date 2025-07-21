@@ -1,4 +1,8 @@
+"""Main entrypoint for the Rose Telegram bot."""
+
 import asyncio
+import importlib
+import inspect
 import logging
 import os
 import sys
@@ -10,11 +14,10 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import CallbackQuery, Message
 
 from db import init_db
-from handlers import register_all
 
 
 # -------------------------------------------------------------
-# Logging setup: DEBUG to stdout and ERROR to logs/error.log
+# Logging setup: DEBUG to stdout/debug.log and ERROR to error.log
 # -------------------------------------------------------------
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
@@ -26,9 +29,15 @@ logging.basicConfig(
     format=LOG_FORMAT,
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(LOG_DIR / "error.log", encoding="utf-8"),
+        logging.FileHandler(LOG_DIR / "debug.log", encoding="utf-8"),
     ],
 )
+
+# Separate handler to capture only errors
+error_handler = logging.FileHandler(LOG_DIR / "error.log", encoding="utf-8")
+error_handler.setLevel(logging.ERROR)
+logging.getLogger().addHandler(error_handler)
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -95,6 +104,35 @@ async def _log_query(client: Client, query: CallbackQuery) -> None:
 
 
 # -------------------------------------------------------------
+# Dynamic handler loader
+# -------------------------------------------------------------
+async def load_handlers(app: Client) -> None:
+    """Import all modules from handlers/ and call their register() function."""
+    handlers_path = Path(__file__).parent / "handlers"
+    for file in sorted(handlers_path.glob("*.py")):
+        if file.stem.startswith("_") or file.stem == "__init__":
+            continue
+        module_name = f"handlers.{file.stem}"
+        try:
+            module = importlib.import_module(module_name)
+        except Exception as imp_err:
+            LOGGER.exception("Failed importing %s: %s", module_name, imp_err)
+            continue
+        register_fn = getattr(module, "register", None)
+        if not register_fn:
+            LOGGER.warning("No register() in %s", module_name)
+            continue
+        try:
+            if inspect.iscoroutinefunction(register_fn):
+                await register_fn(app)
+            else:
+                register_fn(app)
+            LOGGER.info("Loaded handlers from %s", module_name)
+        except Exception as reg_err:
+            LOGGER.exception("Error in register() of %s: %s", module_name, reg_err)
+
+
+# -------------------------------------------------------------
 # Bot startup/shutdown
 # -------------------------------------------------------------
 async def main() -> None:
@@ -104,7 +142,7 @@ async def main() -> None:
     # Register global log handlers
     app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
-    await register_all(app)
+    await load_handlers(app)
     LOGGER.info("Bot started. Press Ctrl+C to stop.")
     await idle()
     LOGGER.info("Stopping bot...")
@@ -114,3 +152,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
