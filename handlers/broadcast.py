@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 def register(app: Client) -> None:
     logger.info("✅ Registered: broadcast.py")
 
+    if OWNER_ID is None:
+        logger.warning("OWNER_ID not set; disabling /broadcast")
+        return
+
     @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
     @catch_errors
     async def broadcast_cmd(client: Client, message: Message) -> None:
