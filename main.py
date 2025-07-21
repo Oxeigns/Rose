@@ -13,9 +13,11 @@ from config import LOG_GROUP_ID
 from utils.markdown import escape_markdown
 
 # ------------------- Logging Setup -------------------
+log_level_str = os.environ.get("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_str, logging.INFO)
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.DEBUG,
+    level=log_level,
 )
 LOGGER = logging.getLogger(__name__)
 

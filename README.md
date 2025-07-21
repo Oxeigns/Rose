@@ -6,7 +6,7 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
 - Modular handler architecture
 - SQLite storage
 - Example configuration via `.env.example`
-- Extensive debug logging for easier troubleshooting
+- Configurable log level via `LOG_LEVEL` env var
 
 ## Running locally
 1. Install the requirements:
@@ -22,7 +22,7 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
    python main.py
    ```
    The bot will exit with an error message if any required credential is missing.
-   All logs are output at the DEBUG level for easy diagnostics.
+   Logging defaults to the INFO level. Set `LOG_LEVEL=DEBUG` for verbose output.
 
 ## Deployment
 Example files are provided for running on container platforms:
