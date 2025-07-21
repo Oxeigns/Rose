@@ -3,5 +3,18 @@ services:
     name: rose-bot
     env: python
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "sh start.sh"
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: sh start.sh
+
+    # Optional: Set Python version (if not using runtime.txt)
+    # runtime: python-3.10
+
+    # Optional: Environment variables (or manage in Render UI)
+    envVars:
+      - key: API_ID
+        value: YOUR_API_ID
+      - key: API_HASH
+        value: YOUR_API_HASH
+      - key: BOT_TOKEN
+        value: YOUR_BOT_TOKEN
