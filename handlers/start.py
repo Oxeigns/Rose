@@ -173,9 +173,18 @@ async def help_cb(client: Client, query: CallbackQuery):
 
 def register(app: Client) -> None:
     # Message Commands
-    app.add_handler(MessageHandler(start_cmd, filters.command("start")))
-    app.add_handler(MessageHandler(menu_cmd, filters.command("menu")))
-    app.add_handler(MessageHandler(help_cmd, filters.command("help")))
+    app.add_handler(
+        MessageHandler(start_cmd, filters.command("start")),
+        group=0,
+    )
+    app.add_handler(
+        MessageHandler(menu_cmd, filters.command("menu")),
+        group=0,
+    )
+    app.add_handler(
+        MessageHandler(help_cmd, filters.command("help")),
+        group=0,
+    )
 
     # Callback Queries
     app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex(r"^menu:open$")))
