@@ -1,6 +1,6 @@
 pyrogram==2.0.106
 tgcrypto==1.2.5
-aiosqlite==0.19.0      # Remove if using MongoDB only
-motor==3.3.1           # Remove if using SQLite only
+aiosqlite==0.19.0
+motor==3.3.1
 python-dotenv==1.0.1
 flask==3.0.0
