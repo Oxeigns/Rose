@@ -56,9 +56,6 @@ def build_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keys)
 
 
-# --------------------------------------------------
-# Help menu
-
 def help_menu() -> InlineKeyboardMarkup:
     keys = []
     temp = []
@@ -116,6 +113,13 @@ async def help_cmd(client: Client, message: Message):
 
 
 # --------------------------------------------------
+# Test command (to verify handlers working)
+
+async def test_cmd(client: Client, message: Message):
+    await message.reply_text("✅ Test command received!")
+
+
+# --------------------------------------------------
 # Callbacks
 
 async def menu_open_cb(client: Client, query: CallbackQuery):
@@ -169,7 +173,7 @@ async def help_cb(client: Client, query: CallbackQuery):
 
 
 # --------------------------------------------------
-# Registration helper
+# Register all handlers
 
 def register(app: Client) -> None:
     # Message Commands
@@ -183,6 +187,10 @@ def register(app: Client) -> None:
     )
     app.add_handler(
         MessageHandler(help_cmd, filters.command("help")),
+        group=0,
+    )
+    app.add_handler(
+        MessageHandler(test_cmd, filters.command("test")),
         group=0,
     )
 
