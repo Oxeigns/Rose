@@ -1,11 +1,11 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 from utils.db import get_admins
 
 REPORT_TAGS = {"@admin", "/report"}
 
 # Reply-only report handler
-@Client.on_message(filters.group & filters.reply & filters.text & (filters.regex(r"(?i)^@admin$") | filters.command("report")))
 async def handle_report(client: Client, message: Message):
     reported_msg = message.reply_to_message
     reporter = message.from_user
@@ -38,3 +38,10 @@ async def get_admin_ids(client, chat_id):
         return [admin.user.id for admin in admins if not admin.user.is_bot]
     except:
         return []
+
+
+def register(app: Client) -> None:
+    report_filter = filters.group & filters.reply & filters.text & (
+        filters.regex(r"(?i)^@admin$") | filters.command("report")
+    )
+    app.add_handler(MessageHandler(handle_report, report_filter))

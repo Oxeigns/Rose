@@ -1,6 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
-from pyrogram.handlers import CallbackQueryHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from buttons.approvals import approvals_panel
 from utils.decorators import admin_required
 from utils.db import (
@@ -12,7 +12,6 @@ from utils.db import (
     set_chat_setting,
 )
 
-@Client.on_message(filters.command("approve") & filters.group)
 @admin_required
 async def approve_user(client: Client, message: Message):
     if not message.reply_to_message:
@@ -28,7 +27,6 @@ async def approve_user(client: Client, message: Message):
         parse_mode="markdown",
     )
 
-@Client.on_message(filters.command("unapprove") & filters.group)
 @admin_required
 async def unapprove_user(client: Client, message: Message):
     if not message.reply_to_message:
@@ -44,7 +42,6 @@ async def unapprove_user(client: Client, message: Message):
         parse_mode="markdown",
     )
 
-@Client.on_message(filters.command("approved") & filters.group)
 @admin_required
 async def list_approved(client: Client, message: Message):
     chat_id = message.chat.id
@@ -60,7 +57,6 @@ async def list_approved(client: Client, message: Message):
     
     await message.reply_text(text, parse_mode="markdown")
 
-@Client.on_message(filters.command("clearapproved") & filters.group)
 @admin_required
 async def clear_approved(client: Client, message: Message):
     chat_id = message.chat.id
@@ -68,7 +64,6 @@ async def clear_approved(client: Client, message: Message):
     await message.reply_text("✅ All approved users have been cleared.")
 
 
-@Client.on_message(filters.command("approvalmode") & filters.group)
 @admin_required
 async def approval_mode_cmd(client: Client, message: Message):
     if len(message.command) == 1:
@@ -92,7 +87,6 @@ async def approval_mode_cmd(client: Client, message: Message):
 
 
 # Callback handler for approvals panel
-@Client.on_callback_query(filters.regex(r"^approvals:(?!open$).+"))
 async def approvals_cb(client: Client, query: CallbackQuery):
     data = query.data.split(":")[1]
     if data == "approve":
@@ -105,3 +99,12 @@ async def approvals_cb(client: Client, query: CallbackQuery):
         text = "Unknown command."
     await query.message.edit_text(text, reply_markup=approvals_panel(), parse_mode="markdown")
     await query.answer()
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(approve_user, filters.command("approve") & filters.group))
+    app.add_handler(MessageHandler(unapprove_user, filters.command("unapprove") & filters.group))
+    app.add_handler(MessageHandler(list_approved, filters.command("approved") & filters.group))
+    app.add_handler(MessageHandler(clear_approved, filters.command("clearapproved") & filters.group))
+    app.add_handler(MessageHandler(approval_mode_cmd, filters.command("approvalmode") & filters.group))
+    app.add_handler(CallbackQueryHandler(approvals_cb, filters.regex(r"^approvals:(?!open$).+")))

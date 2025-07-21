@@ -1,5 +1,12 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ChatPermissions
+from pyrogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery,
+    ChatPermissions,
+)
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 import asyncio
 
@@ -8,7 +15,6 @@ CAPTCHA_CHATS = set()
 # Tracks pending verifications: (chat_id, user_id): message_id
 PENDING = {}
 
-@Client.on_message(filters.command("captcha") & filters.group)
 @admin_required
 async def toggle_captcha(client: Client, message: Message):
     chat_id = message.chat.id
@@ -19,7 +25,6 @@ async def toggle_captcha(client: Client, message: Message):
         CAPTCHA_CHATS.add(chat_id)
         await message.reply_text("✅ CAPTCHA has been enabled.")
 
-@Client.on_message(filters.new_chat_members)
 async def handle_new_user(client: Client, message: Message):
     chat_id = message.chat.id
     if chat_id not in CAPTCHA_CHATS:
@@ -58,7 +63,6 @@ async def handle_new_user(client: Client, message: Message):
         except Exception as e:
             print(f"Captcha error: {e}")
 
-@Client.on_callback_query(filters.regex(r"^cverify:(\d+)$"))
 async def captcha_verify(client: Client, query: CallbackQuery):
     user_id = int(query.data.split(":")[1])
     chat_id = query.message.chat.id
@@ -92,3 +96,9 @@ async def captcha_verify(client: Client, query: CallbackQuery):
 
     except Exception as e:
         await query.answer("❌ Could not verify. Try again or contact admin.", show_alert=True)
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(toggle_captcha, filters.command("captcha") & filters.group))
+    app.add_handler(MessageHandler(handle_new_user, filters.new_chat_members))
+    app.add_handler(CallbackQueryHandler(captcha_verify, filters.regex(r"^cverify:(\d+)$")))
