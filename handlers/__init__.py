@@ -10,7 +10,7 @@ from pyrogram import Client
 
 LOGGER = logging.getLogger(__name__)
 
-# Collect all Python modules in handlers/ (excluding private & __init__)
+# Collect all Python files in handlers/, excluding private files and __init__.py
 ALL_MODULES = [
     p.stem
     for p in Path(__file__).parent.glob("*.py")
@@ -18,20 +18,23 @@ ALL_MODULES = [
 ]
 
 async def register_all(app: Client) -> None:
-    """Dynamically import all modules in 'handlers' and register their handlers."""
+    """Dynamically import all handler modules and call their register() functions."""
+
+    LOGGER.info("📦 Registering all handlers...")
 
     for module_name in sorted(ALL_MODULES):
         module_path = f"handlers.{module_name}"
+
         try:
             module = importlib.import_module(module_path)
-            LOGGER.debug("📦 Imported module: %s", module_path)
-        except Exception:
-            LOGGER.exception("Failed to import %s", module_path)
+            LOGGER.debug("📦 Imported: %s", module_path)
+        except Exception as import_err:
+            LOGGER.exception("❌ Failed to import module '%s': %s", module_name, import_err)
             continue
 
         register_fn = getattr(module, "register", None)
         if not register_fn:
-            LOGGER.debug("No register() in %s", module_name)
+            LOGGER.warning("⚠️ No register() function found in %s", module_name)
             continue
 
         try:
@@ -39,6 +42,6 @@ async def register_all(app: Client) -> None:
                 await register_fn(app)
             else:
                 register_fn(app)
-            LOGGER.info("✅ Handlers loaded from %s", module_name)
-        except Exception:
-            LOGGER.exception("Error running register() in %s", module_name)
+            LOGGER.info("✅ Handlers registered from: %s", module_name)
+        except Exception as reg_err:
+            LOGGER.exception("❌ Error calling register() in '%s': %s", module_name, reg_err)
