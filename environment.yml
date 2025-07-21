@@ -1,4 +1,5 @@
 name: rosebot
+
 dependencies:
   - python=3.10
   - pip
@@ -6,3 +7,6 @@ dependencies:
       - pyrogram
       - tgcrypto
       - aiosqlite
+      - motor
+      - python-dotenv
+      - flask
