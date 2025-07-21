@@ -15,7 +15,7 @@ from utils.markdown import escape_markdown
 # ------------------- Logging Setup -------------------
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,
+    level=logging.DEBUG,
 )
 LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +49,27 @@ async def send_log(text: str) -> None:
     except Exception as log_e:
         LOGGER.warning("Log group send failed: %s", log_e)
 
+# ------------------- Global Error Handler --------------
+def handle_exception(loop: asyncio.AbstractEventLoop, context: dict) -> None:
+    """Log and report unhandled exceptions in the asyncio loop."""
+    exception = context.get("exception")
+    message = context.get("message", "Unhandled exception")
+    LOGGER.error("Unhandled exception: %s", message, exc_info=exception)
+    err_text = str(exception or message)
+    if loop.is_running():
+        loop.create_task(
+            send_log(f"🚨 Unhandled exception: `{escape_markdown(err_text)}`")
+        )
+
 # ------------------- Bot Runner ------------------------
 async def main() -> None:
     try:
         await app.start()  # 🔄 Start client first
         LOGGER.info("🔗 Connected to Telegram")
+
+        # Report any unhandled exceptions through our custom handler
+        loop = asyncio.get_running_loop()
+        loop.set_exception_handler(handle_exception)
 
         await init_db()
         LOGGER.info("📦 Database initialized")
