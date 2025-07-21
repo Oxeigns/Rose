@@ -36,11 +36,28 @@ async def register_all(app: Client) -> None:
                 else:
                     register_fn(app)
 
-            # Register any manually-attached handlers (if using decorators)
+            # Register any manually-attached handlers (using @Client.on_* or
+            # @filters.* decorators). Pyrogram <=1.x stored (handler, group)
+            # tuples. Pyrogram 2.x may instead store (handler, filter) if the
+            # decorator was used with keyword arguments. Support both formats.
             for attr in module.__dict__.values():
                 if callable(attr) and hasattr(attr, "handlers"):
-                    for handler, group in getattr(attr, "handlers"):
-                        app.add_handler(handler, group=group)
+                    for item in getattr(attr, "handlers"):
+                        try:
+                            handler, value = item
+                        except (TypeError, ValueError):
+                            # Unexpected format; skip this handler
+                            continue
+
+                        if isinstance(value, int):
+                            group = value
+                            app.add_handler(handler, group=group)
+                        else:
+                            # value is likely a filters object; rebuild the
+                            # handler with the provided filter and default
+                            # group 0 for compatibility
+                            new_handler = type(handler)(handler.callback, value)
+                            app.add_handler(new_handler, group=0)
 
             LOGGER.info("✅ Loaded handlers from: %s", module_name)
 
