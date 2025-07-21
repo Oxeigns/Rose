@@ -18,8 +18,12 @@ from buttons import (
     notes_panel,
 )
 
-# --------------------------------------------------
-# Control panel button layout
+import logging
+LOGGER = logging.getLogger(__name__)
+
+# ---------------------------------------
+# Panels
+
 MODULE_BUTTONS = [
     ("⚙️ Admin", "admin:open"),
     ("💬 Filters", "filters:open"),
@@ -40,9 +44,7 @@ MODULE_PANELS = {
     "notes": notes_panel,
 }
 
-
 def build_menu() -> InlineKeyboardMarkup:
-    """Return the main control panel keyboard."""
     keys = []
     temp = []
     for text, cb in MODULE_BUTTONS:
@@ -54,7 +56,6 @@ def build_menu() -> InlineKeyboardMarkup:
         keys.append(temp)
     keys.append([InlineKeyboardButton("❌ Close", callback_data="menu:close")])
     return InlineKeyboardMarkup(keys)
-
 
 def help_menu() -> InlineKeyboardMarkup:
     keys = []
@@ -69,15 +70,16 @@ def help_menu() -> InlineKeyboardMarkup:
     keys.append([InlineKeyboardButton("❌ Close", callback_data="help:close")])
     return InlineKeyboardMarkup(keys)
 
-
-# --------------------------------------------------
+# ---------------------------------------
 # Commands
 
 async def start_cmd(client: Client, message: Message):
-    if message.chat.type in ["group", "supergroup"]:
-        text = "**Thanks for adding me!**\nUse /menu to configure moderation."
-    else:
-        text = "**🌹 Rose Bot**\nI help moderate and protect your group."
+    LOGGER.debug("📩 /start received")
+    text = (
+        "**Thanks for adding me!**\nUse /menu to configure moderation."
+        if message.chat.type in ["group", "supergroup"]
+        else "**🌹 Rose Bot**\nI help moderate and protect your group."
+    )
     await message.reply_text(
         text,
         reply_markup=InlineKeyboardMarkup(
@@ -86,12 +88,12 @@ async def start_cmd(client: Client, message: Message):
         quote=True,
     )
 
-
 async def menu_cmd(client: Client, message: Message):
+    LOGGER.debug("📩 /menu received")
     await message.reply_text("**📋 Control Panel**", reply_markup=build_menu(), quote=True)
 
-
 async def help_cmd(client: Client, message: Message):
+    LOGGER.debug("📩 /help received")
     if len(message.command) > 1:
         mod = message.command[1].lower()
         if mod in HELP_MODULES:
@@ -111,35 +113,28 @@ async def help_cmd(client: Client, message: Message):
         parse_mode="markdown",
     )
 
-
-# --------------------------------------------------
-# Test command (to verify handlers working)
-
 async def test_cmd(client: Client, message: Message):
+    LOGGER.debug("📩 /test received")
     await message.reply_text("✅ Test command received!")
 
-
-# --------------------------------------------------
+# ---------------------------------------
 # Callbacks
 
 async def menu_open_cb(client: Client, query: CallbackQuery):
+    LOGGER.debug("🟢 menu:open callback")
     await query.message.edit_text(
-        "**📋 Control Panel**",
-        reply_markup=build_menu(),
-        parse_mode="markdown",
+        "**📋 Control Panel**", reply_markup=build_menu(), parse_mode="markdown"
     )
     await query.answer()
 
-
 async def panel_open_cb(client: Client, query: CallbackQuery):
+    LOGGER.debug("🟢 %s callback", query.data)
     module = query.data.split(":")[0]
     panel_func = MODULE_PANELS.get(module)
     markup = (
         panel_func()
         if panel_func
-        else InlineKeyboardMarkup(
-            [[InlineKeyboardButton("⬅️ Back", callback_data="menu:open")]]
-        )
+        else InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="menu:open")]])
     )
     await query.message.edit_text(
         f"**🔧 {module.title()} Panel**",
@@ -148,55 +143,38 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
     )
     await query.answer()
 
-
 async def menu_cb(client: Client, query: CallbackQuery):
-    await query.message.edit_text(
-        "**📋 Control Panel**", reply_markup=build_menu(), parse_mode="markdown"
-    )
+    await query.message.edit_text("**📋 Control Panel**", reply_markup=build_menu(), parse_mode="markdown")
     await query.answer()
-
 
 async def close_cb(client: Client, query: CallbackQuery):
     await query.message.delete()
     await query.answer()
-
 
 async def help_cb(client: Client, query: CallbackQuery):
     mod = query.data.split(":")[1]
     if mod == "close":
         await query.message.delete()
         return
-
     text = HELP_MODULES.get(mod, "❌ Module not found.")
     await query.message.edit_text(text, reply_markup=help_menu(), parse_mode="markdown")
     await query.answer()
 
-
-# --------------------------------------------------
-# Register all handlers
+# ---------------------------------------
+# Register all
 
 def register(app: Client) -> None:
-    # Message Commands
-    app.add_handler(
-        MessageHandler(start_cmd, filters.command("start")),
-        group=0,
-    )
-    app.add_handler(
-        MessageHandler(menu_cmd, filters.command("menu")),
-        group=0,
-    )
-    app.add_handler(
-        MessageHandler(help_cmd, filters.command("help")),
-        group=0,
-    )
-    app.add_handler(
-        MessageHandler(test_cmd, filters.command("test")),
-        group=0,
-    )
+    print("✅ start.py loaded")  # Helpful for debugging
 
-    # Callback Queries
+    app.add_handler(MessageHandler(start_cmd, filters.command("start")), group=0)
+    app.add_handler(MessageHandler(menu_cmd, filters.command("menu")), group=0)
+    app.add_handler(MessageHandler(help_cmd, filters.command("help")), group=0)
+    app.add_handler(MessageHandler(test_cmd, filters.command("test")), group=0)
+
     app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex(r"^menu:open$")))
     app.add_handler(CallbackQueryHandler(menu_cb, filters.regex(r"^main:menu$")))
     app.add_handler(CallbackQueryHandler(close_cb, filters.regex(r"^menu:close$")))
     app.add_handler(CallbackQueryHandler(help_cb, filters.regex(r"^help:.+")))
     app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex(r"^(?!menu)[a-z]+:open$")))
+
+    LOGGER.info("✅ start.py handlers registered")
