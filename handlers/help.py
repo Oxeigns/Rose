@@ -1,6 +1,4 @@
-from pyrogram import Client, filters
-from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+"""Help module descriptions used by the start module."""
 
 # Individual command descriptions for the help panel
 HELP_MODULES = {
@@ -72,48 +70,4 @@ HELP_MODULES = {
     "approvalmode": "Toggle approval-only mode for regular users.",
 }
 
-# Dynamic help menu builder
-def help_menu() -> InlineKeyboardMarkup:
-    keys = []
-    temp = []
-    for i, mod in enumerate(sorted(HELP_MODULES.keys())):
-        temp.append(InlineKeyboardButton(mod.title(), callback_data=f"help:{mod}"))
-        if len(temp) == 2:
-            keys.append(temp)
-            temp = []
-    if temp:
-        keys.append(temp)
-    keys.append([InlineKeyboardButton("❌ Close", callback_data="help:close")])
-    return InlineKeyboardMarkup(keys)
-
-# /help command
-async def help_cmd(client: Client, message: Message):
-    if len(message.command) > 1:
-        mod = message.command[1].lower()
-        if mod in HELP_MODULES:
-            await message.reply_text(f"{HELP_MODULES[mod]}", reply_markup=help_menu(), parse_mode="markdown")
-        else:
-            await message.reply_text("❌ Unknown module.")
-        return
-
-    await message.reply_text(
-        "**🛠 Help Panel**\nClick a button below to view module commands:",
-        reply_markup=help_menu(),
-        parse_mode="markdown"
-    )
-
-# Inline button callback
-async def help_cb(client: Client, query: CallbackQuery):
-    mod = query.data.split(":")[1]
-    if mod == "close":
-        await query.message.delete()
-        return
-
-    text = HELP_MODULES.get(mod, "❌ Module not found.")
-    await query.message.edit_text(text, reply_markup=help_menu(), parse_mode="markdown")
-    await query.answer()
-
-# Register handlers
-def register(app: Client):
-    app.add_handler(MessageHandler(help_cmd, filters.command("help")))
-    app.add_handler(CallbackQueryHandler(help_cb, filters.regex(r"^help:.+")))
+# The actual /help command logic is now implemented in ``handlers.start``.
