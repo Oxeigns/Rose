@@ -52,10 +52,9 @@ async def auto_clean(client: Client, message: Message):
 def register(app: Client) -> None:
     app.add_handler(MessageHandler(set_clean, filters.command("cleancommand") & filters.group))
     app.add_handler(MessageHandler(keep_command, filters.command("keepcommand") & filters.group))
-    app.add_handler(
-        MessageHandler(
-            auto_clean,
-            filters.regex(r"^/") & (filters.group | filters.private),
-            group=-1,
-        )
+
+    handler = MessageHandler(
+        auto_clean,
+        filters.regex(r"^/") & (filters.group | filters.private),
     )
+    app.add_handler(handler, group=-1)

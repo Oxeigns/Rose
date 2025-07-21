@@ -61,6 +61,6 @@ def register(app: Client) -> None:
     app.add_handler(MessageHandler(disable_command, filters.command("disable") & filters.group))
     app.add_handler(MessageHandler(enable_command, filters.command("enable") & filters.group))
     app.add_handler(MessageHandler(list_disabled, filters.command("disabled") & filters.group))
-    app.add_handler(
-        MessageHandler(block_disabled, filters.command("") & filters.group, group=-99)
-    )
+
+    handler = MessageHandler(block_disabled, filters.command("") & filters.group)
+    app.add_handler(handler, group=-99)
