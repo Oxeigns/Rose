@@ -12,11 +12,11 @@ from db import init_db
 # ------------------- Logging Setup -------------------
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO,  # Change to DEBUG to see message logs
+    level=logging.DEBUG,  # 👈 Show all logs including message content
 )
 LOGGER = logging.getLogger(__name__)
 
-# ------------------- Environment ---------------------
+# ------------------- Environment Variables -------------------
 load_dotenv()
 
 API_ID = int(os.environ.get("API_ID", "123456"))
@@ -29,36 +29,39 @@ if (
     API_HASH == "YOUR_API_HASH" or
     BOT_TOKEN == "YOUR_BOT_TOKEN"
 ):
-    LOGGER.error("❌ Missing API credentials. Set them in .env.")
+    LOGGER.error("❌ Missing API credentials. Please set them in the .env file.")
     raise SystemExit(1)
 
-# ------------------- Pyrogram Client -------------------
+# ------------------- Pyrogram Client Setup -------------------
 app = Client(
-    SESSION_NAME,
+    name=SESSION_NAME,
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
 )
 
-# ------------------- Global Error Handler --------------
+# ------------------- Error Handler -------------------
 def handle_exception(loop: asyncio.AbstractEventLoop, context: dict) -> None:
-    """Log unhandled exceptions in the asyncio loop."""
-    exception = context.get("exception")
-    message = context.get("message", "Unhandled exception")
-    LOGGER.error("Unhandled exception: %s", message, exc_info=exception)
+    """Log unhandled asyncio exceptions."""
+    exc = context.get("exception")
+    msg = context.get("message", "Unhandled exception occurred")
+    LOGGER.error("Unhandled exception: %s", msg, exc_info=exc)
 
-# ------------------- Bot Runner ------------------------
+# ------------------- Bot Startup -------------------
 async def main() -> None:
     try:
         await app.start()
         LOGGER.info("✅ Bot started and connected to Telegram")
 
+        # Setup error handler
         loop = asyncio.get_running_loop()
         loop.set_exception_handler(handle_exception)
 
+        # Initialize database
         await init_db()
         LOGGER.info("📦 Database initialized")
 
+        # Load all handlers
         await register_all(app)
         LOGGER.info("✅ All handlers registered")
 
@@ -66,12 +69,12 @@ async def main() -> None:
         await idle()
 
     except Exception as e:
-        LOGGER.exception("🚨 Bot crashed unexpectedly")
+        LOGGER.exception("🚨 Bot crashed due to an error")
 
     finally:
         await app.stop()
-        LOGGER.info("🛑 Bot stopped gracefully.")
+        LOGGER.info("🛑 Bot stopped gracefully")
 
-# ------------------- Entry Point ------------------------
+# ------------------- Entry Point -------------------
 if __name__ == "__main__":
     asyncio.run(main())
