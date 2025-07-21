@@ -1,7 +1,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.handlers import MessageHandler
 
-@Client.on_message(filters.command("formatting"))
 async def formatting_help(client: Client, message: Message):
     text = """
 **✨ Telegram Message Formatting Guide**
@@ -32,3 +32,7 @@ __Make sure bots are configured to parse Markdown or HTML!__
     )
 
     await message.reply_text(text, reply_markup=buttons, parse_mode="markdown")
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(formatting_help, filters.command("formatting")))

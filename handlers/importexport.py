@@ -1,6 +1,7 @@
 import json
 from pyrogram import Client, filters
 from pyrogram.types import Message, Document
+from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import (
     export_chat_data,
@@ -8,7 +9,6 @@ from utils.db import (
 )
 
 # Export data to JSON and send it as file
-@Client.on_message(filters.command("export") & filters.group)
 @admin_required
 async def export_data(client: Client, message: Message):
     data = await export_chat_data(message.chat.id)
@@ -21,7 +21,6 @@ async def export_data(client: Client, message: Message):
 
 
 # Import JSON data back into current group
-@Client.on_message(filters.command("import") & filters.group)
 @admin_required
 async def import_data(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.document:
@@ -46,7 +45,6 @@ async def import_data(client: Client, message: Message):
 
 
 # Optional help shortcut
-@Client.on_message(filters.command("importexport") & filters.group)
 async def importexport_help(client: Client, message: Message):
     text = (
         "**📤 Import & Export Help**\n\n"
@@ -55,3 +53,9 @@ async def importexport_help(client: Client, message: Message):
         "_Only group admins can use this. Useful for backups and moving data._"
     )
     await message.reply_text(text, parse_mode="markdown")
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(export_data, filters.command("export") & filters.group))
+    app.add_handler(MessageHandler(import_data, filters.command("import") & filters.group))
+    app.add_handler(MessageHandler(importexport_help, filters.command("importexport") & filters.group))

@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 from utils.markdown import escape_markdown
 from utils.decorators import admin_required
 
@@ -8,7 +9,6 @@ FEDERATIONS = {}          # fed_name: {'owner': user_id, 'banned_users': set()}
 GROUP_TO_FED = {}         # chat_id: fed_name
 USER_TO_FEDS = {}         # user_id: set(fed_names)
 
-@Client.on_message(filters.command("createfed") & filters.group)
 @admin_required
 async def create_fed(client: Client, message: Message):
     if len(message.command) < 2:
@@ -29,7 +29,6 @@ async def create_fed(client: Client, message: Message):
     )
 
 
-@Client.on_message(filters.command("joinfed") & filters.group)
 @admin_required
 async def join_fed(client: Client, message: Message):
     if len(message.command) < 2:
@@ -48,7 +47,6 @@ async def join_fed(client: Client, message: Message):
     )
 
 
-@Client.on_message(filters.command("leavefed") & filters.group)
 @admin_required
 async def leave_fed(client: Client, message: Message):
     if message.chat.id not in GROUP_TO_FED:
@@ -62,7 +60,6 @@ async def leave_fed(client: Client, message: Message):
     )
 
 
-@Client.on_message(filters.command("federations"))
 async def list_feds(client: Client, message: Message):
     user_id = message.from_user.id
     user_feds = USER_TO_FEDS.get(user_id, set())
@@ -77,7 +74,6 @@ async def list_feds(client: Client, message: Message):
     await message.reply_text(text, parse_mode="markdown")
 
 
-@Client.on_message(filters.command("fedban") & filters.group)
 @admin_required
 async def fed_ban(client: Client, message: Message):
     if not message.reply_to_message:
@@ -98,7 +94,6 @@ async def fed_ban(client: Client, message: Message):
     )
 
 
-@Client.on_message(filters.command("fedunban") & filters.group)
 @admin_required
 async def fed_unban(client: Client, message: Message):
     if not message.reply_to_message:
@@ -119,7 +114,6 @@ async def fed_unban(client: Client, message: Message):
     )
 
 
-@Client.on_message(filters.new_chat_members)
 async def enforce_fedban(client: Client, message: Message):
     chat_id = message.chat.id
     fed_name = GROUP_TO_FED.get(chat_id)
@@ -134,3 +128,13 @@ async def enforce_fedban(client: Client, message: Message):
                 await message.reply_text(f"⚠️ {user.mention} was FedBanned and removed.")
             except Exception:
                 pass
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(create_fed, filters.command("createfed") & filters.group))
+    app.add_handler(MessageHandler(join_fed, filters.command("joinfed") & filters.group))
+    app.add_handler(MessageHandler(leave_fed, filters.command("leavefed") & filters.group))
+    app.add_handler(MessageHandler(list_feds, filters.command("federations")))
+    app.add_handler(MessageHandler(fed_ban, filters.command("fedban") & filters.group))
+    app.add_handler(MessageHandler(fed_unban, filters.command("fedunban") & filters.group))
+    app.add_handler(MessageHandler(enforce_fedban, filters.new_chat_members))

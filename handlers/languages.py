@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import get_chat_setting, set_chat_setting
 
@@ -13,7 +14,6 @@ SUPPORTED_LANGUAGES = {
     # Add more as needed
 }
 
-@Client.on_message(filters.command("languages") & filters.group)
 async def show_languages(client: Client, message: Message):
     current = get_chat_setting(message.chat.id, "lang", "en")
     langs = "\n".join(f"• `{code}` - {name}" for code, name in SUPPORTED_LANGUAGES.items())
@@ -24,7 +24,6 @@ async def show_languages(client: Client, message: Message):
         parse_mode="markdown"
     )
 
-@Client.on_message(filters.command("setlang") & filters.group)
 @admin_required
 async def set_language(client: Client, message: Message):
     if len(message.command) < 2:
@@ -38,3 +37,8 @@ async def set_language(client: Client, message: Message):
 
     set_chat_setting(message.chat.id, "lang", code)
     await message.reply_text(f"✅ Language set to `{SUPPORTED_LANGUAGES[code]}`", parse_mode="markdown")
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(show_languages, filters.command("languages") & filters.group))
+    app.add_handler(MessageHandler(set_language, filters.command("setlang") & filters.group))

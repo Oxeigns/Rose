@@ -1,12 +1,12 @@
 from pyrogram import Client, filters, StopPropagation
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 from utils.db import get_chat_setting, set_chat_setting
 from utils.decorators import admin_required
 
 # In-memory store for disabled commands (replace with DB in production)
 DISABLED_CMDS = {}  # chat_id: set(command_names)
 
-@Client.on_message(filters.command("disable") & filters.group)
 @admin_required
 async def disable_command(client: Client, message: Message):
     if len(message.command) < 2:
@@ -19,7 +19,6 @@ async def disable_command(client: Client, message: Message):
     DISABLED_CMDS.setdefault(chat_id, set()).add(cmd)
     await message.reply_text(f"🚫 Command `/{cmd}` has been disabled.", parse_mode="markdown")
 
-@Client.on_message(filters.command("enable") & filters.group)
 @admin_required
 async def enable_command(client: Client, message: Message):
     if len(message.command) < 2:
@@ -32,7 +31,6 @@ async def enable_command(client: Client, message: Message):
     DISABLED_CMDS.setdefault(chat_id, set()).discard(cmd)
     await message.reply_text(f"✅ Command `/{cmd}` has been enabled.", parse_mode="markdown")
 
-@Client.on_message(filters.command("disabled") & filters.group)
 @admin_required
 async def list_disabled(client: Client, message: Message):
     chat_id = message.chat.id
@@ -47,7 +45,6 @@ async def list_disabled(client: Client, message: Message):
     await message.reply_text(text, parse_mode="markdown")
 
 # Global filter hook to block disabled commands (lowest priority group)
-@Client.on_message(filters.command("") & filters.group, group=-99)
 async def block_disabled(client: Client, message: Message):
     chat_id = message.chat.id
     cmd = message.command[0].lower().lstrip("/")
@@ -58,3 +55,12 @@ async def block_disabled(client: Client, message: Message):
         except Exception:
             pass
         raise StopPropagation
+
+
+def register(app: Client) -> None:
+    app.add_handler(MessageHandler(disable_command, filters.command("disable") & filters.group))
+    app.add_handler(MessageHandler(enable_command, filters.command("enable") & filters.group))
+    app.add_handler(MessageHandler(list_disabled, filters.command("disabled") & filters.group))
+    app.add_handler(
+        MessageHandler(block_disabled, filters.command("") & filters.group, group=-99)
+    )
