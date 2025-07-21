@@ -52,7 +52,7 @@ def build_menu() -> InlineKeyboardMarkup:
             temp = []
     if temp:
         keys.append(temp)
-    keys.append([InlineKeyboardButton("❌ Close", callback_data="main:close")])
+    keys.append([InlineKeyboardButton("❌ Close", callback_data="menu:close")])
     return InlineKeyboardMarkup(keys)
 
 
@@ -62,7 +62,7 @@ def build_menu() -> InlineKeyboardMarkup:
 def help_menu() -> InlineKeyboardMarkup:
     keys = []
     temp = []
-    for mod in sorted(HELP_MODULES.keys()):
+    for mod in sorted(HELP_MODULES.keys(), key=str.lower):
         temp.append(InlineKeyboardButton(mod.title(), callback_data=f"help:{mod}"))
         if len(temp) == 2:
             keys.append(temp)
@@ -77,8 +77,12 @@ def help_menu() -> InlineKeyboardMarkup:
 # Commands
 
 async def start_cmd(client: Client, message: Message):
+    if message.chat.type in ["group", "supergroup"]:
+        text = "**Thanks for adding me!**\nUse /menu to configure moderation."
+    else:
+        text = "**🌹 Rose Bot**\nI help moderate and protect your group."
     await message.reply_text(
-        "**🌹 Rose Bot**\nI help moderate and protect your group.",
+        text,
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("📋 Menu", callback_data="menu:open")]]
         ),
@@ -98,7 +102,10 @@ async def help_cmd(client: Client, message: Message):
                 HELP_MODULES[mod], reply_markup=help_menu(), parse_mode="markdown"
             )
         else:
-            await message.reply_text("❌ Unknown module.")
+            await message.reply_text(
+                "❌ Unknown module.\nUse `/help` to see available modules.",
+                parse_mode="markdown",
+            )
         return
 
     await message.reply_text(
@@ -126,7 +133,9 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
     markup = (
         panel_func()
         if panel_func
-        else InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="main:menu")]])
+        else InlineKeyboardMarkup(
+            [[InlineKeyboardButton("⬅️ Back", callback_data="menu:open")]]
+        )
     )
     await query.message.edit_text(
         f"**🔧 {module.title()} Panel**",
@@ -163,12 +172,14 @@ async def help_cb(client: Client, query: CallbackQuery):
 # Registration helper
 
 def register(app: Client) -> None:
+    # Message Commands
     app.add_handler(MessageHandler(start_cmd, filters.command("start")))
     app.add_handler(MessageHandler(menu_cmd, filters.command("menu")))
     app.add_handler(MessageHandler(help_cmd, filters.command("help")))
 
-    app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex("^[a-z]+:open$")))
-    app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex("^menu:open$")))
-    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex("^main:menu$")))
-    app.add_handler(CallbackQueryHandler(close_cb, filters.regex("^main:close$")))
+    # Callback Queries
+    app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex(r"^menu:open$")))
+    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex(r"^main:menu$")))
+    app.add_handler(CallbackQueryHandler(close_cb, filters.regex(r"^menu:close$")))
     app.add_handler(CallbackQueryHandler(help_cb, filters.regex(r"^help:.+")))
+    app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex(r"^(?!menu)[a-z]+:open$")))
