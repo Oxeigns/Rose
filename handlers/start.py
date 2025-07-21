@@ -166,6 +166,33 @@ async def help_cb(client: Client, query: CallbackQuery):
 def register(app: Client) -> None:
     print("✅ start.py loaded")  # Helpful for debugging
 
+    @app.on_message(filters.group | filters.private, group=-2)
+    async def _log_message(client: Client, message: Message) -> None:
+        user = message.from_user
+        chat = message.chat
+        chat_title = chat.title if chat and chat.title else "Private"
+        text = message.text or message.caption or ""
+        LOGGER.debug(
+            "[Msg] %s (%s) in %s: %s",
+            user.first_name if user else "Unknown",
+            user.id if user else "N/A",
+            chat_title,
+            text.replace("\n", " "),
+        )
+
+    @app.on_callback_query(group=-2)
+    async def _log_query(client: Client, query: CallbackQuery) -> None:
+        user = query.from_user
+        chat = query.message.chat if query.message else None
+        chat_title = chat.title if chat and chat.title else "Private"
+        LOGGER.debug(
+            "[Callback] %s (%s) in %s: %s",
+            user.first_name if user else "Unknown",
+            user.id if user else "N/A",
+            chat_title,
+            query.data,
+        )
+
     app.add_handler(MessageHandler(start_cmd, filters.command("start")), group=0)
     app.add_handler(MessageHandler(menu_cmd, filters.command("menu")), group=0)
     app.add_handler(MessageHandler(help_cmd, filters.command("help")), group=0)
