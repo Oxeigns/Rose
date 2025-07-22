@@ -14,12 +14,10 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import CallbackQuery, Message
 
 from handlers import register_all as register_handlers
-
 from db import init_db
 
-
 # -------------------------------------------------------------
-# Logging setup: DEBUG to stdout/debug.log and ERROR to error.log
+# Logging setup
 # -------------------------------------------------------------
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
@@ -35,16 +33,14 @@ logging.basicConfig(
     ],
 )
 
-# Separate handler to capture only errors
 error_handler = logging.FileHandler(LOG_DIR / "error.log", encoding="utf-8")
 error_handler.setLevel(logging.ERROR)
 logging.getLogger().addHandler(error_handler)
 
 LOGGER = logging.getLogger(__name__)
 
-
 # -------------------------------------------------------------
-# Environment loading and validation
+# Load environment
 # -------------------------------------------------------------
 load_dotenv()
 
@@ -63,15 +59,13 @@ except ValueError:
     LOGGER.error("API_ID must be an integer")
     raise SystemExit(1)
 
-
 # -------------------------------------------------------------
-# Client initialization
+# Bot client
 # -------------------------------------------------------------
 app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-
 # -------------------------------------------------------------
-# Global logging of all messages and callback queries
+# Global logging handlers
 # -------------------------------------------------------------
 async def _log_message(client: Client, message: Message) -> None:
     user = message.from_user
@@ -104,65 +98,60 @@ async def _log_query(client: Client, query: CallbackQuery) -> None:
         query.data,
     )
 
-
 # -------------------------------------------------------------
-# Dynamic handler loader
-# -------------------------------------------------------------
-async def load_handlers(app: Client) -> None:
-    """Import all modules from the handlers package."""
-    await register_handlers(app)
-
-
-# -------------------------------------------------------------
-# Dynamic modules loader
+# Module loader
 # -------------------------------------------------------------
 async def load_modules(app: Client) -> None:
-    """Import all modules from modules/ and call their register() function."""
+    """Import all modules from modules/ and optionally call register()"""
     modules_path = Path(__file__).parent / "modules"
     if not modules_path.exists():
+        LOGGER.warning("No 'modules' folder found.")
         return
+
     for file in sorted(modules_path.glob("*.py")):
         if file.stem.startswith("_") or file.stem == "__init__":
             continue
+
         module_name = f"modules.{file.stem}"
         try:
             module = importlib.import_module(module_name)
         except Exception as imp_err:
             LOGGER.exception("Failed importing %s: %s", module_name, imp_err)
             continue
-        register_fn = getattr(module, "register", None)
-        if not register_fn:
-            LOGGER.warning("No register() in %s", module_name)
-            continue
-        try:
-            if inspect.iscoroutinefunction(register_fn):
-                await register_fn(app)
-            else:
-                register_fn(app)
-            LOGGER.info("Loaded module %s", module_name)
-        except Exception as reg_err:
-            LOGGER.exception("Error in register() of %s: %s", module_name, reg_err)
 
+        register_fn = getattr(module, "register", None)
+        if register_fn:
+            try:
+                if inspect.iscoroutinefunction(register_fn):
+                    await register_fn(app)
+                else:
+                    register_fn(app)
+                LOGGER.info("Loaded module %s via register()", module_name)
+            except Exception as reg_err:
+                LOGGER.exception("Error in register() of %s: %s", module_name, reg_err)
+        else:
+            LOGGER.info("Imported %s (no register(), assuming decorator-based commands)", module_name)
 
 # -------------------------------------------------------------
-# Bot startup/shutdown
+# Bot lifecycle
 # -------------------------------------------------------------
 async def main() -> None:
     LOGGER.info("Starting bot...")
     await app.start()
     await init_db()
-    # Register global log handlers
+
     app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
+
     await load_modules(app)
     await load_handlers(app)
+
     LOGGER.info("Bot started. Press Ctrl+C to stop.")
     await idle()
+
     LOGGER.info("Stopping bot...")
     await app.stop()
     LOGGER.info("Bot stopped.")
 
-
 if __name__ == "__main__":
     asyncio.run(main())
-
