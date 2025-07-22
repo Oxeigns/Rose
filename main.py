@@ -144,7 +144,7 @@ async def main() -> None:
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
 
     await load_modules(app)
-    await load_handlers(app)
+    await register_handlers(app)
 
     LOGGER.info("Bot started. Press Ctrl+C to stop.")
     await idle()
