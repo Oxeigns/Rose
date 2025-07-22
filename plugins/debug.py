@@ -20,3 +20,10 @@ async def log_queries(client: Client, query: CallbackQuery) -> None:
     chat_title = chat.title if chat and chat.title else 'Private'
     msg_type = 'Group' if chat and chat.type in ('group', 'supergroup') else 'Private'
     LOGGER.debug('[Callback %s] %s (%s) in %s (%s): %s', msg_type, user.first_name if user else 'Unknown', user.id if user else 'N/A', chat_title, chat.id if chat else 'N/A', query.data)
+
+
+@Client.on_message(filters.all)
+async def catch_all(client: Client, message: Message) -> None:
+    """Echo back any received message for debugging purposes."""
+    print("\U0001F525 Received:", message.text)
+    await message.reply("\u2705 I heard you!")
