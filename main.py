@@ -21,7 +21,7 @@ LOG_DIR.mkdir(exist_ok=True)
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format=LOG_FORMAT,
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -58,14 +58,23 @@ except ValueError:
 # -------------------------------------------------------------
 # Bot Client
 # -------------------------------------------------------------
+plugins_root = Path(__file__).resolve().parent / "plugins"
 app = Client(
     SESSION_NAME,
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
     workers=50,
-    plugins={"root": "plugins"}
+    plugins=None,
 )
+
+def load_plugins() -> None:
+    """Load all plugin modules and log the number of handlers."""
+    app.plugins = {"root": str(plugins_root)}
+    app.load_plugins()
+    total = sum(len(g) for g in app.dispatcher.groups.values())
+    LOGGER.info("Loaded %d handlers from %s", total, plugins_root)
+    app.plugins = None
 
 # -------------------------------------------------------------
 
@@ -87,6 +96,7 @@ def _delete_webhook() -> None:
 # -------------------------------------------------------------
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
+    load_plugins()
 
     # Remove any webhook to enable polling with getUpdates
     await asyncio.to_thread(_delete_webhook)
