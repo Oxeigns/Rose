@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from pyrogram import Client, filters, idle
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import Message, CallbackQuery
+import json
+import urllib.request
 
 from db import init_db
 
@@ -96,13 +98,27 @@ async def _log_query(client: Client, query: CallbackQuery) -> None:
         query.data,
     )
 
+def _delete_webhook() -> None:
+    """Remove any existing webhook using Telegram's Bot API."""
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
+    try:
+        with urllib.request.urlopen(url) as response:
+            data = json.load(response)
+        if not data.get("ok"):
+            LOGGER.warning("Failed to delete webhook: %s", data)
+        else:
+            LOGGER.info("Deleted existing webhook")
+    except Exception as exc:
+        LOGGER.warning("Error deleting webhook: %s", exc)
+
 # -------------------------------------------------------------
 # Bot Lifecycle
 # -------------------------------------------------------------
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
 
-    await app.delete_webhook()  # ✅ Important for polling to work
+    # Remove any webhook to enable polling with getUpdates
+    await asyncio.to_thread(_delete_webhook)
     await app.start()
     await init_db()
 
