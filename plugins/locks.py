@@ -2,7 +2,7 @@ from pyrogram import Client, filters, types
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 from pyrogram.types import CallbackQuery
-from buttons.lock import lock_panel
+from modules.buttons.lock import lock_panel
 LOCK_MAP = {'messages': None, 'media': 'can_send_media_messages', 'sticker': 'can_send_stickers', 'photo': 'can_send_photos', 'video': 'can_send_videos', 'voice': 'can_send_voice_notes', 'audio': 'can_send_audios', 'documents': 'can_send_documents', 'polls': 'can_send_polls', 'links': 'can_add_web_page_previews', 'inline': 'can_use_inline_bots', 'games': 'can_add_web_page_previews', 'invite': 'can_invite_users', 'pin': 'can_pin_messages', 'info': 'can_change_info'}
 
 def build_permissions(**kwargs):
