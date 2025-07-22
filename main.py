@@ -7,9 +7,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from pyrogram import Client, filters, idle
-from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from pyrogram.types import Message, CallbackQuery
+from pyrogram import Client, idle
 import json
 import urllib.request
 
@@ -70,33 +68,6 @@ app = Client(
 )
 
 # -------------------------------------------------------------
-# Logging Handlers
-# -------------------------------------------------------------
-async def _log_message(client: Client, message: Message) -> None:
-    user = message.from_user
-    chat = message.chat
-    LOGGER.debug(
-        "[%s] %s (%s) in %s (%s): %s",
-        "Group" if chat.type in ("group", "supergroup") else "Private",
-        user.first_name if user else "Unknown",
-        user.id if user else "N/A",
-        chat.title if chat else "N/A",
-        chat.id if chat else "N/A",
-        message.text or message.caption or "",
-    )
-
-async def _log_query(client: Client, query: CallbackQuery) -> None:
-    user = query.from_user
-    chat = query.message.chat if query.message else None
-    LOGGER.debug(
-        "[Callback %s] %s (%s) in %s (%s): %s",
-        "Group" if chat and chat.type in ("group", "supergroup") else "Private",
-        user.first_name if user else "Unknown",
-        user.id if user else "N/A",
-        chat.title if chat else "N/A",
-        chat.id if chat else "N/A",
-        query.data,
-    )
 
 def _delete_webhook() -> None:
     """Remove any existing webhook using Telegram's Bot API."""
@@ -121,15 +92,6 @@ async def main() -> None:
     await asyncio.to_thread(_delete_webhook)
     await app.start()
     await init_db()
-
-    # Logging
-    app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
-    app.add_handler(CallbackQueryHandler(_log_query), group=-2)
-
-    # 🔎 Catch-all for testing if bot is getting messages
-    @app.on_message(filters.all)
-    async def catch_all(client, message):
-        LOGGER.debug("⚠️ Catch-all received: %s", message.text or message.caption)
 
     LOGGER.info("✅ Bot started. Waiting for events...")
     await idle()

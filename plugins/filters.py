@@ -2,7 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
 from utils.markdown import escape_markdown
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from buttons.filters import filters_panel
+from modules.buttons.filters import filters_panel
 from utils.decorators import is_admin
 from utils.db import add_filter, remove_filter, list_filters, get_filter, clear_filters
 
