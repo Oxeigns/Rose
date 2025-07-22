@@ -65,8 +65,7 @@ app = Client(
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
-    workers=50,
-    plugins=dict(root=str(PLUGINS_DIR)),  # enable plugin handlers
+    plugins=dict(root="plugins"),  # <-- correct format
 )
 
 logging.getLogger("pyrogram").setLevel(logging.INFO)
