@@ -7,7 +7,7 @@ from db.warns import add_warn, get_warns, reset_warns, remove_warn
 import aiosqlite
 from db.warns import DB_PATH
 from pyrogram.types import CallbackQuery
-from buttons.warnings import warnings_panel
+from modules.buttons.warnings import warnings_panel
 DEFAULT_LIMIT = 3
 
 @Client.on_message(filters.command('warn') & filters.group)

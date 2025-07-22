@@ -1,8 +1,7 @@
 from pyrogram import Client, filters
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from .help import HELP_MODULES
-from buttons import admin_panel, filters_panel, rules_panel, warnings_panel, approvals_panel, lock_panel, notes_panel
+from modules.buttons import admin_panel, filters_panel, rules_panel, warnings_panel, approvals_panel, lock_panel, notes_panel
 import logging
 LOGGER = logging.getLogger(__name__)
 MODULE_BUTTONS = [('⚙️ Admin', 'admin:open'), ('💬 Filters', 'filters:open'), ('📜 Rules', 'rules:open'), ('⚠️ Warnings', 'warnings:open'), ('✅ Approvals', 'approvals:open'), ('🔒 Lock', 'lock:open'), ('📝 Notes', 'notes:open')]
@@ -96,18 +95,3 @@ async def help_cb(client: Client, query: CallbackQuery):
     text = HELP_MODULES.get(mod, '❌ Module not found.')
     await query.message.edit_text(text, reply_markup=help_menu(), parse_mode='markdown')
     await query.answer()
-
-@Client.on_message(filters.group | filters.private, group=-2)
-async def _log_message(client: Client, message: Message) -> None:
-    user = message.from_user
-    chat = message.chat
-    chat_title = chat.title if chat and chat.title else 'Private'
-    text = message.text or message.caption or ''
-    LOGGER.debug('[Msg] %s (%s) in %s: %s', user.first_name if user else 'Unknown', user.id if user else 'N/A', chat_title, text.replace('\n', ' '))
-
-@Client.on_callback_query(group=-2)
-async def _log_query(client: Client, query: CallbackQuery) -> None:
-    user = query.from_user
-    chat = query.message.chat if query.message else None
-    chat_title = chat.title if chat and chat.title else 'Private'
-    LOGGER.debug('[Callback] %s (%s) in %s: %s', user.first_name if user else 'Unknown', user.id if user else 'N/A', chat_title, query.data)
