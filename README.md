@@ -26,5 +26,13 @@ Example files are provided for running on container platforms:
 - `Dockerfile` for Docker based deployments
 - `Procfile` and `render.yaml` for hosting services
 
+## Telegram Setup
+1. Disable privacy mode for your bot via **BotFather** so it can see all group
+   messages.
+2. Add the bot to your group and promote it to **admin** with permission to
+   delete messages and restrict users. Most features require admin rights.
+3. Use `/start` or `/help` to verify the bot responds. Inline buttons rely on
+   callback queries which are registered automatically when the bot starts.
+
 ---
 Licensed under the MIT License.
