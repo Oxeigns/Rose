@@ -1,6 +1,7 @@
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
+
 LOGGER = logging.getLogger(__name__)
 
 @Client.on_message(filters.group | filters.private, group=-2)
