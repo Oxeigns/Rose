@@ -58,7 +58,8 @@ except ValueError:
 # -------------------------------------------------------------
 # Bot Client
 # -------------------------------------------------------------
-plugins_root = Path(__file__).resolve().parent / "plugins"
+plugins_root = "plugins"  # package-style path used by Pyrogram
+PLUGINS_DIR = Path(__file__).resolve().parent / plugins_root
 app = Client(
     SESSION_NAME,
     api_id=API_ID,
@@ -73,7 +74,7 @@ def load_plugins() -> None:
     app.plugins = {"root": str(plugins_root)}
     app.load_plugins()
     total = sum(len(g) for g in app.dispatcher.groups.values())
-    LOGGER.info("Loaded %d handlers from %s", total, plugins_root)
+    LOGGER.info("Loaded %d handlers from %s", total, PLUGINS_DIR)
     app.plugins = None
 
 # -------------------------------------------------------------
