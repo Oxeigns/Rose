@@ -53,7 +53,7 @@ async def stopall_cmd(client: Client, message: Message):
 
 
 async def filter_worker(client: Client, message: Message):
-    if not message.text:
+    if not message.text or message.text.startswith("/"):
         return
 
     text = message.text.lower()
