@@ -13,6 +13,8 @@ from pyrogram import Client, filters, idle
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import CallbackQuery, Message
 
+from handlers import register_all as register_handlers
+
 from db import init_db
 
 
@@ -107,29 +109,8 @@ async def _log_query(client: Client, query: CallbackQuery) -> None:
 # Dynamic handler loader
 # -------------------------------------------------------------
 async def load_handlers(app: Client) -> None:
-    """Import all modules from handlers/ and call their register() function."""
-    handlers_path = Path(__file__).parent / "handlers"
-    for file in sorted(handlers_path.glob("*.py")):
-        if file.stem.startswith("_") or file.stem == "__init__":
-            continue
-        module_name = f"handlers.{file.stem}"
-        try:
-            module = importlib.import_module(module_name)
-        except Exception as imp_err:
-            LOGGER.exception("Failed importing %s: %s", module_name, imp_err)
-            continue
-        register_fn = getattr(module, "register", None)
-        if not register_fn:
-            LOGGER.warning("No register() in %s", module_name)
-            continue
-        try:
-            if inspect.iscoroutinefunction(register_fn):
-                await register_fn(app)
-            else:
-                register_fn(app)
-            LOGGER.info("Loaded handlers from %s", module_name)
-        except Exception as reg_err:
-            LOGGER.exception("Error in register() of %s: %s", module_name, reg_err)
+    """Import all modules from the handlers package."""
+    await register_handlers(app)
 
 
 # -------------------------------------------------------------
