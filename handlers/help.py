@@ -71,3 +71,12 @@ HELP_MODULES = {
 }
 
 # The actual /help command logic is now implemented in ``handlers.start``.
+
+from pyrogram import Client
+
+
+def register(app: Client) -> None:
+    """Placeholder to satisfy the handler loader."""
+    # This module only provides help text used by ``handlers.start`` and
+    # doesn't need to register any handlers itself.
+    return None
