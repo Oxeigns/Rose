@@ -66,8 +66,10 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
     workers=50,
-    plugins=dict(root="plugins"),  # ✅ this enables your plugin handlers
+    plugins=dict(root=str(PLUGINS_DIR)),  # enable plugin handlers
 )
+
+logging.getLogger("pyrogram").setLevel(logging.INFO)
 
 # -------------------------------------------------------------
 # Delete webhook to enable polling

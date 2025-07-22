@@ -1,11 +1,43 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 from .help import HELP_MODULES
-from modules.buttons import admin_panel, filters_panel, rules_panel, warnings_panel, approvals_panel, lock_panel, notes_panel
+from modules.buttons import (
+    admin_panel,
+    approvals_panel,
+    filters_panel,
+    lock_panel,
+    notes_panel,
+    rules_panel,
+    warnings_panel,
+)
 import logging
+
 LOGGER = logging.getLogger(__name__)
-MODULE_BUTTONS = [('⚙️ Admin', 'admin:open'), ('💬 Filters', 'filters:open'), ('📜 Rules', 'rules:open'), ('⚠️ Warnings', 'warnings:open'), ('✅ Approvals', 'approvals:open'), ('🔒 Lock', 'lock:open'), ('📝 Notes', 'notes:open')]
-MODULE_PANELS = {'admin': admin_panel, 'filters': filters_panel, 'rules': rules_panel, 'warnings': warnings_panel, 'approvals': approvals_panel, 'lock': lock_panel, 'notes': notes_panel}
+
+MODULE_BUTTONS = [
+    ("⚙️ Admin", "admin:open"),
+    ("💬 Filters", "filters:open"),
+    ("📜 Rules", "rules:open"),
+    ("⚠️ Warnings", "warnings:open"),
+    ("✅ Approvals", "approvals:open"),
+    ("🔒 Lock", "lock:open"),
+    ("📝 Notes", "notes:open"),
+]
+
+MODULE_PANELS = {
+    "admin": admin_panel,
+    "filters": filters_panel,
+    "rules": rules_panel,
+    "warnings": warnings_panel,
+    "approvals": approvals_panel,
+    "lock": lock_panel,
+    "notes": notes_panel,
+}
 
 def build_menu() -> InlineKeyboardMarkup:
     keys = []
@@ -37,12 +69,21 @@ def help_menu() -> InlineKeyboardMarkup:
 async def start_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /start received')
     text = '**Thanks for adding me!**\nUse /menu to configure moderation.' if message.chat.type in ['group', 'supergroup'] else '**🌹 Rose Bot**\nI help moderate and protect your group.'
-    await message.reply_text(text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]), quote=True)
+    await message.reply_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
+        ),
+        quote=True,
+        parse_mode="markdown",
+    )
 
 @Client.on_message(filters.command('menu'), group=0)
 async def menu_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /menu received')
-    await message.reply_text('**📋 Control Panel**', reply_markup=build_menu(), quote=True)
+    await message.reply_text(
+        '**📋 Control Panel**', reply_markup=build_menu(), quote=True, parse_mode="markdown"
+    )
 
 @Client.on_message(filters.command('help'), group=0)
 async def help_cmd(client: Client, message: Message):
