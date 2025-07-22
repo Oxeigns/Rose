@@ -5,11 +5,11 @@ import logging
 import os
 import sys
 from pathlib import Path
+import json
+import urllib.request
 
 from dotenv import load_dotenv
 from pyrogram import Client, idle
-import json
-import urllib.request
 
 from db import init_db
 
@@ -36,7 +36,7 @@ logging.getLogger().addHandler(error_handler)
 LOGGER = logging.getLogger(__name__)
 
 # -------------------------------------------------------------
-# Load environment
+# Load environment variables
 # -------------------------------------------------------------
 load_dotenv()
 
@@ -46,7 +46,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 SESSION_NAME = os.getenv("SESSION_NAME", "rose_bot")
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
-    LOGGER.error("API_ID, API_HASH and BOT_TOKEN must be provided.")
+    LOGGER.error("API_ID, API_HASH, and BOT_TOKEN must be provided.")
     raise SystemExit(1)
 
 try:
@@ -56,31 +56,23 @@ except ValueError:
     raise SystemExit(1)
 
 # -------------------------------------------------------------
-# Bot Client
+# Bot Client with plugin support
 # -------------------------------------------------------------
-plugins_root = "plugins"  # package-style path used by Pyrogram
-PLUGINS_DIR = Path(__file__).resolve().parent / plugins_root
+PLUGINS_DIR = Path(__file__).resolve().parent / "plugins"
+
 app = Client(
     SESSION_NAME,
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
     workers=50,
-    plugins=None,
+    plugins={"root": "plugins"},
 )
 
-def load_plugins() -> None:
-    """Load all plugin modules and log the number of handlers."""
-    app.plugins = {"root": str(plugins_root)}
-    app.load_plugins()
-    total = sum(len(g) for g in app.dispatcher.groups.values())
-    LOGGER.info("Loaded %d handlers from %s", total, PLUGINS_DIR)
-    app.plugins = None
-
 # -------------------------------------------------------------
-
+# Delete webhook to enable polling
+# -------------------------------------------------------------
 def _delete_webhook() -> None:
-    """Remove any existing webhook using Telegram's Bot API."""
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
     try:
         with urllib.request.urlopen(url) as response:
@@ -88,25 +80,24 @@ def _delete_webhook() -> None:
         if not data.get("ok"):
             LOGGER.warning("Failed to delete webhook: %s", data)
         else:
-            LOGGER.info("Deleted existing webhook")
-    except Exception as exc:
-        LOGGER.warning("Error deleting webhook: %s", exc)
+            LOGGER.info("Webhook deleted.")
+    except Exception as e:
+        LOGGER.warning("Error deleting webhook: %s", e)
 
 # -------------------------------------------------------------
-# Bot Lifecycle
+# Bot lifecycle
 # -------------------------------------------------------------
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
-    load_plugins()
 
-    # Remove any webhook to enable polling with getUpdates
     await asyncio.to_thread(_delete_webhook)
     await app.start()
     await init_db()
 
-    LOGGER.info("✅ Bot started. Waiting for events...")
+    LOGGER.info("✅ Rose bot is running. Awaiting events...")
     await idle()
-    LOGGER.info("🛑 Bot stopped. Cleaning up...")
+
+    LOGGER.info("🛑 Stopping bot...")
     await app.stop()
 
 if __name__ == "__main__":
