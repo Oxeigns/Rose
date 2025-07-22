@@ -133,6 +133,37 @@ async def load_handlers(app: Client) -> None:
 
 
 # -------------------------------------------------------------
+# Dynamic modules loader
+# -------------------------------------------------------------
+async def load_modules(app: Client) -> None:
+    """Import all modules from modules/ and call their register() function."""
+    modules_path = Path(__file__).parent / "modules"
+    if not modules_path.exists():
+        return
+    for file in sorted(modules_path.glob("*.py")):
+        if file.stem.startswith("_") or file.stem == "__init__":
+            continue
+        module_name = f"modules.{file.stem}"
+        try:
+            module = importlib.import_module(module_name)
+        except Exception as imp_err:
+            LOGGER.exception("Failed importing %s: %s", module_name, imp_err)
+            continue
+        register_fn = getattr(module, "register", None)
+        if not register_fn:
+            LOGGER.warning("No register() in %s", module_name)
+            continue
+        try:
+            if inspect.iscoroutinefunction(register_fn):
+                await register_fn(app)
+            else:
+                register_fn(app)
+            LOGGER.info("Loaded module %s", module_name)
+        except Exception as reg_err:
+            LOGGER.exception("Error in register() of %s: %s", module_name, reg_err)
+
+
+# -------------------------------------------------------------
 # Bot startup/shutdown
 # -------------------------------------------------------------
 async def main() -> None:
@@ -142,6 +173,7 @@ async def main() -> None:
     # Register global log handlers
     app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
+    await load_modules(app)
     await load_handlers(app)
     LOGGER.info("Bot started. Press Ctrl+C to stop.")
     await idle()
