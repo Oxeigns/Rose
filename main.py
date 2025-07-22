@@ -66,7 +66,7 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
     workers=50,
-    plugins=dict(root="Rose.plugins"),  # 👈 Ensure this matches folder structure
+    plugins=dict(root="plugins")  # ✔️ Correct if plugins/ is in same folder as main.py  # 👈 Ensure this matches folder structure
 )
 
 # -------------------------------------------------------------
