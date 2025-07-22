@@ -64,11 +64,11 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
     workers=50,
-    plugins={"root": "plugins"}  # Optional if you're using a plugins folder
+    plugins={"root": "plugins"}
 )
 
 # -------------------------------------------------------------
-# Debug Logging Handlers
+# Logging Handlers
 # -------------------------------------------------------------
 async def _log_message(client: Client, message: Message) -> None:
     user = message.from_user
@@ -96,23 +96,21 @@ async def _log_query(client: Client, query: CallbackQuery) -> None:
         query.data,
     )
 
-
 # -------------------------------------------------------------
-# Main Bot Lifecycle
+# Bot Lifecycle
 # -------------------------------------------------------------
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
 
+    await app.delete_webhook()  # ✅ Important for polling to work
     await app.start()
     await init_db()
 
-    # Logging handlers
+    # Logging
     app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
 
-    # Handlers are loaded automatically from the plugins folder
-
-    # Catch-all debug
+    # 🔎 Catch-all for testing if bot is getting messages
     @app.on_message(filters.all)
     async def catch_all(client, message):
         LOGGER.debug("⚠️ Catch-all received: %s", message.text or message.caption)
