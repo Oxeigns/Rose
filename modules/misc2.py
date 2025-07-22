@@ -1,5 +1,5 @@
 from pyrogram import Client
-from handlers.start import register as handler_register
+from handlers.misc2 import register as handler_register
 
 def register(app: Client) -> None:
     handler_register(app)
