@@ -119,16 +119,25 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex('^main:menu$'))
 async def menu_cb(client: Client, query: CallbackQuery):
+    LOGGER.debug('🟢 main:menu callback')
     await query.message.edit_text('**📋 Control Panel**', reply_markup=build_menu(), parse_mode='markdown')
     await query.answer()
 
 @Client.on_callback_query(filters.regex('^menu:close$'))
 async def close_cb(client: Client, query: CallbackQuery):
+    LOGGER.debug('🟢 menu:close callback')
+    await query.message.delete()
+    await query.answer()
+
+@Client.on_callback_query(filters.regex('^main:close$'))
+async def close_main_cb(client: Client, query: CallbackQuery):
+    LOGGER.debug('🟢 main:close callback')
     await query.message.delete()
     await query.answer()
 
 @Client.on_callback_query(filters.regex('^help:.+'))
 async def help_cb(client: Client, query: CallbackQuery):
+    LOGGER.debug('🟢 %s callback', query.data)
     mod = query.data.split(':')[1]
     if mod == 'close':
         await query.message.delete()

@@ -44,29 +44,23 @@ load_dotenv()
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-SESSION_NAME = os.getenv("SESSION_NAME", "rose_bot")
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
     LOGGER.error("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.")
     raise SystemExit(1)
 
-try:
-    API_ID = int(API_ID)
-except ValueError:
-    LOGGER.error("❌ API_ID must be an integer.")
-    raise SystemExit(1)
+API_ID = int(API_ID)
 
 # -------------------------------------------------------------
 # Bot Client with plugin support
 # -------------------------------------------------------------
 # IMPORTANT: 'Rose.plugins' must match the real directory structure.
 app = Client(
-    SESSION_NAME,
+    "rose_bot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
-    workers=50,
-    plugins=dict(root="plugins")  # ✔️ Correct if plugins/ is in same folder as main.py  # 👈 Ensure this matches folder structure
+    plugins=dict(root="plugins"),
 )
 
 # -------------------------------------------------------------
