@@ -11,7 +11,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pyrogram import Client, filters, idle
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from pyrogram.types import CallbackQuery, Message
+from pyrogram.types import Message, CallbackQuery
 
 from handlers import register_all as register_handlers
 from db import init_db
@@ -23,9 +23,8 @@ LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format=LOG_FORMAT,
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -50,62 +49,64 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 SESSION_NAME = os.getenv("SESSION_NAME", "rose_bot")
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
-    LOGGER.error("API_ID, API_HASH and BOT_TOKEN must be provided")
+    LOGGER.error("API_ID, API_HASH and BOT_TOKEN must be provided.")
     raise SystemExit(1)
 
 try:
     API_ID = int(API_ID)
 except ValueError:
-    LOGGER.error("API_ID must be an integer")
+    LOGGER.error("API_ID must be an integer.")
     raise SystemExit(1)
 
 # -------------------------------------------------------------
-# Bot client
+# Bot Client
 # -------------------------------------------------------------
-app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+app = Client(
+    SESSION_NAME,
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN,
+    workers=50,
+    plugins={"root": "plugins"}  # Optional if you're using a plugins folder
+)
 
 # -------------------------------------------------------------
-# Global logging handlers
+# Debug Logging Handlers
 # -------------------------------------------------------------
 async def _log_message(client: Client, message: Message) -> None:
     user = message.from_user
     chat = message.chat
-    chat_title = chat.title if chat and chat.title else "Private"
-    msg_type = "Group" if chat and chat.type in ("group", "supergroup") else "Private"
-    text = message.text or message.caption or ""
     LOGGER.debug(
         "[%s] %s (%s) in %s (%s): %s",
-        msg_type,
+        "Group" if chat.type in ("group", "supergroup") else "Private",
         user.first_name if user else "Unknown",
         user.id if user else "N/A",
-        chat_title,
+        chat.title if chat else "N/A",
         chat.id if chat else "N/A",
-        text.replace("\n", " "),
+        message.text or message.caption or "",
     )
 
 async def _log_query(client: Client, query: CallbackQuery) -> None:
     user = query.from_user
     chat = query.message.chat if query.message else None
-    chat_title = chat.title if chat and chat.title else "Private"
-    msg_type = "Group" if chat and chat.type in ("group", "supergroup") else "Private"
     LOGGER.debug(
         "[Callback %s] %s (%s) in %s (%s): %s",
-        msg_type,
+        "Group" if chat and chat.type in ("group", "supergroup") else "Private",
         user.first_name if user else "Unknown",
         user.id if user else "N/A",
-        chat_title,
+        chat.title if chat else "N/A",
         chat.id if chat else "N/A",
         query.data,
     )
 
 # -------------------------------------------------------------
-# Module loader
+# Dynamic Module Loader
 # -------------------------------------------------------------
 async def load_modules(app: Client) -> None:
-    """Import all modules from modules/ and optionally call register()"""
+    """Dynamically import all modules in 'modules/' and run register() if present."""
     modules_path = Path(__file__).parent / "modules"
     if not modules_path.exists():
-        LOGGER.warning("No 'modules' folder found.")
+        LOGGER.warning("⚠️ No 'modules' folder found.")
         return
 
     for file in sorted(modules_path.glob("*.py")):
@@ -115,8 +116,9 @@ async def load_modules(app: Client) -> None:
         module_name = f"modules.{file.stem}"
         try:
             module = importlib.import_module(module_name)
-        except Exception as imp_err:
-            LOGGER.exception("Failed importing %s: %s", module_name, imp_err)
+            LOGGER.debug("📦 Imported module: %s", module_name)
+        except Exception as e:
+            LOGGER.exception("❌ Failed to import %s: %s", module_name, e)
             continue
 
         register_fn = getattr(module, "register", None)
@@ -126,37 +128,39 @@ async def load_modules(app: Client) -> None:
                     await register_fn(app)
                 else:
                     register_fn(app)
-                LOGGER.info("Loaded module %s via register()", module_name)
-            except Exception as reg_err:
-                LOGGER.exception("Error in register() of %s: %s", module_name, reg_err)
-        else:
-            LOGGER.info("Imported %s (no register(), assuming decorator-based commands)", module_name)
+                LOGGER.info("✅ Registered module: %s", module_name)
+            except Exception as e:
+                LOGGER.exception("❌ Error in %s.register(): %s", module_name, e)
 
 # -------------------------------------------------------------
-# Bot lifecycle
+# Main Bot Lifecycle
 # -------------------------------------------------------------
 async def main() -> None:
-    LOGGER.info("Starting bot...")
+    LOGGER.info("🚀 Starting Rose bot...")
+
     await app.start()
     await init_db()
 
+    # Logging handlers
     app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
 
-    await load_modules(app)
+    # Load all handlers and modules
     await register_handlers(app)
+    await load_modules(app)
 
-    # ✅ DEBUG CATCH-ALL to see if bot gets any messages
+    # Catch-all debug
     @app.on_message(filters.all)
-    async def debug_all_messages(client, message):
-        print("⚠️ Message received:", message.text or message.caption)
+    async def catch_all(client, message):
+        LOGGER.debug("⚠️ Catch-all received: %s", message.text or message.caption)
 
-    LOGGER.info("Bot started. Press Ctrl+C to stop.")
+    LOGGER.info("✅ Bot started. Waiting for events...")
     await idle()
-
-    LOGGER.info("Stopping bot...")
+    LOGGER.info("🛑 Bot stopped. Cleaning up...")
     await app.stop()
-    LOGGER.info("Bot stopped.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        LOGGER.info("Interrupted. Exiting...")
