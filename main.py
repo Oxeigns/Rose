@@ -1,8 +1,6 @@
 """Main entrypoint for the Rose Telegram bot."""
 
 import asyncio
-import importlib
-import inspect
 import logging
 import os
 import sys
@@ -13,7 +11,6 @@ from pyrogram import Client, filters, idle
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.types import Message, CallbackQuery
 
-from handlers import register_all as register_handlers
 from db import init_db
 
 # -------------------------------------------------------------
@@ -99,38 +96,6 @@ async def _log_query(client: Client, query: CallbackQuery) -> None:
         query.data,
     )
 
-# -------------------------------------------------------------
-# Dynamic Module Loader
-# -------------------------------------------------------------
-async def load_modules(app: Client) -> None:
-    """Dynamically import all modules in 'modules/' and run register() if present."""
-    modules_path = Path(__file__).parent / "modules"
-    if not modules_path.exists():
-        LOGGER.warning("⚠️ No 'modules' folder found.")
-        return
-
-    for file in sorted(modules_path.glob("*.py")):
-        if file.stem.startswith("_") or file.stem == "__init__":
-            continue
-
-        module_name = f"modules.{file.stem}"
-        try:
-            module = importlib.import_module(module_name)
-            LOGGER.debug("📦 Imported module: %s", module_name)
-        except Exception as e:
-            LOGGER.exception("❌ Failed to import %s: %s", module_name, e)
-            continue
-
-        register_fn = getattr(module, "register", None)
-        if register_fn:
-            try:
-                if inspect.iscoroutinefunction(register_fn):
-                    await register_fn(app)
-                else:
-                    register_fn(app)
-                LOGGER.info("✅ Registered module: %s", module_name)
-            except Exception as e:
-                LOGGER.exception("❌ Error in %s.register(): %s", module_name, e)
 
 # -------------------------------------------------------------
 # Main Bot Lifecycle
@@ -145,9 +110,7 @@ async def main() -> None:
     app.add_handler(MessageHandler(_log_message, filters.group | filters.private), group=-2)
     app.add_handler(CallbackQueryHandler(_log_query), group=-2)
 
-    # Load all handlers and modules
-    await register_handlers(app)
-    await load_modules(app)
+    # Handlers are loaded automatically from the plugins folder
 
     # Catch-all debug
     @app.on_message(filters.all)
