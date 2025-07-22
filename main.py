@@ -146,6 +146,11 @@ async def main() -> None:
     await load_modules(app)
     await register_handlers(app)
 
+    # ✅ DEBUG CATCH-ALL to see if bot gets any messages
+    @app.on_message(filters.all)
+    async def debug_all_messages(client, message):
+        print("⚠️ Message received:", message.text or message.caption)
+
     LOGGER.info("Bot started. Press Ctrl+C to stop.")
     await idle()
 
