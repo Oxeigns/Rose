@@ -3,7 +3,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from buttons.rules import rules_panel
+from modules.buttons.rules import rules_panel
 
 @Client.on_message(filters.command('rules') & (filters.group | filters.private))
 async def rules_cmd(client, message):

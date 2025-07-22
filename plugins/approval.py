@@ -1,7 +1,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from buttons.approvals import approvals_panel
+from modules.buttons.approvals import approvals_panel
 from utils.decorators import admin_required
 from utils.db import add_approval, remove_approval, list_approvals, clear_approvals, get_chat_setting, set_chat_setting
 
