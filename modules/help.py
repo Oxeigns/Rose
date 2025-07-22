@@ -1,7 +1,10 @@
-from pyrogram import Client, filters
-from pyrogram.handlers import MessageHandler
-from handlers.start import help_cmd
+"""Module wrapper for /help command registration."""
+
+from pyrogram import Client
+
+from handlers.help_command import register as handler_register
+
 
 def register(app: Client) -> None:
-    """Register the /help command using the default handler."""
-    app.add_handler(MessageHandler(help_cmd, filters.command("help")))
+    """Delegate registration to ``handlers.help_command``."""
+    handler_register(app)
