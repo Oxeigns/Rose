@@ -66,7 +66,7 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
     workers=50,
-    plugins={"root": "plugins"},
+    plugins=dict(root="plugins"),  # ✅ this enables your plugin handlers
 )
 
 # -------------------------------------------------------------
