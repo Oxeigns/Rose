@@ -63,6 +63,7 @@ app = Client(
     plugins=dict(root="plugins"),
 )
 
+
 # -------------------------------------------------------------
 # Delete webhook to enable polling
 # -------------------------------------------------------------
@@ -79,6 +80,7 @@ def _delete_webhook() -> None:
     except Exception as e:
         LOGGER.warning("⚠️ Exception while deleting webhook: %s", e)
 
+
 # -------------------------------------------------------------
 # Bot lifecycle
 # -------------------------------------------------------------
@@ -93,6 +95,13 @@ async def main() -> None:
         LOGGER.exception("❌ Failed to start bot: %s", e)
         return
 
+    handler_count = sum(len(g) for g in app.dispatcher.groups.values())
+    LOGGER.info(
+        "🔌 Loaded %s handler(s) across %s group(s)",
+        handler_count,
+        len(app.dispatcher.groups),
+    )
+
     await init_db()
     LOGGER.info("✅ Rose bot is running. Awaiting events...")
 
@@ -102,6 +111,7 @@ async def main() -> None:
         LOGGER.info("🛑 Stopping bot...")
         await app.stop()
         LOGGER.info("✅ Bot stopped cleanly.")
+
 
 # -------------------------------------------------------------
 if __name__ == "__main__":
