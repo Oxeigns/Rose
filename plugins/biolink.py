@@ -15,6 +15,7 @@ _user_bio_cache: dict[int, tuple[str, float]] = {}
 BIO_CACHE_TTL = 15 * 60
 _bio_violation_cache: dict[tuple[int, int], float] = {}
 BIO_VIOLATION_TTL = 20
+edited_messages: set[tuple[int, int]] = set()
 
 def contains_link(text: str) -> bool:
     return bool(LINK_RE.search(text or ''))
@@ -77,16 +78,16 @@ async def bio_link_violation(client: Client, message: Message, user, chat_id: in
         return True
     return False
 
-async def delete_later(chat_id: int, msg_id: int, delay: int) -> None:
+async def delete_later(client: Client, chat_id: int, msg_id: int, delay: int) -> None:
     await asyncio.sleep(delay)
     try:
-        await app.delete_messages(chat_id, msg_id)
+        await client.delete_messages(chat_id, msg_id)
     except Exception as e:
         logger.warning('Failed to delete message %s/%s: %s', chat_id, msg_id, e)
     finally:
         edited_messages.discard((chat_id, msg_id))
 
-async def schedule_auto_delete(chat_id: int, msg_id: int, fallback: int | None=None):
+async def schedule_auto_delete(client: Client, chat_id: int, msg_id: int, fallback: int | None = None):
     try:
         delay = int(await get_setting(chat_id, 'autodelete_interval', '0') or 0)
     except (TypeError, ValueError):
@@ -94,7 +95,7 @@ async def schedule_auto_delete(chat_id: int, msg_id: int, fallback: int | None=N
     if delay <= 0:
         delay = fallback or 0
     if delay > 0:
-        asyncio.create_task(delete_later(chat_id, msg_id, delay))
+        asyncio.create_task(delete_later(client, chat_id, msg_id, delay))
 
 @Client.on_message(filters.group & ~filters.service, group=1)
 @catch_errors
@@ -120,7 +121,7 @@ async def moderate_message(client: Client, message: Message) -> None:
         await handle_violation(client, message, user, chat_id, 'You are not allowed to share links in this group.')
         return
     if needs_filtering:
-        await schedule_auto_delete(chat_id, message.id)
+        await schedule_auto_delete(client, chat_id, message.id)
 
 @Client.on_edited_message(filters.group & ~filters.service, group=1)
 @catch_errors
@@ -136,7 +137,7 @@ async def on_edit(client: Client, message: Message):
     key = (chat_id, message.id)
     if key not in edited_messages:
         edited_messages.add(key)
-        await schedule_auto_delete(chat_id, message.id, fallback=0)
+        await schedule_auto_delete(client, chat_id, message.id, fallback=0)
 
 @Client.on_message(filters.new_chat_members & filters.group, group=1)
 @catch_errors
