@@ -6,6 +6,7 @@ from contextlib import suppress
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message, ChatPermissions
+from pyrogram.handlers import MessageHandler, EditedMessageHandler
 from utils.errors import catch_errors
 from utils.db import get_setting, get_bio_filter, increment_warning, reset_warning, is_approved, get_approval_mode
 from utils.perms import is_admin

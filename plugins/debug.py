@@ -1,6 +1,7 @@
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.info("🔧 Debug plugin loaded")
