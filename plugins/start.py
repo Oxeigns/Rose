@@ -65,7 +65,6 @@ def help_menu() -> InlineKeyboardMarkup:
     keys.append([InlineKeyboardButton('❌ Close', callback_data='help:close')])
     return InlineKeyboardMarkup(keys)
 
-@Client.on_message(filters.command('start'), group=0)
 async def start_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /start received')
     text = '**Thanks for adding me!**\nUse /menu to configure moderation.' if message.chat.type in ['group', 'supergroup'] else '**🌹 Rose Bot**\nI help moderate and protect your group.'
@@ -78,14 +77,12 @@ async def start_cmd(client: Client, message: Message):
         parse_mode="markdown",
     )
 
-@Client.on_message(filters.command('menu'), group=0)
 async def menu_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /menu received')
     await message.reply_text(
         '**📋 Control Panel**', reply_markup=build_menu(), quote=True, parse_mode="markdown"
     )
 
-@Client.on_message(filters.command('help'), group=0)
 async def help_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /help received')
     if len(message.command) > 1:
@@ -97,18 +94,15 @@ async def help_cmd(client: Client, message: Message):
         return
     await message.reply_text('**🛠 Help Panel**\nClick a button below to view module commands:', reply_markup=help_menu(), parse_mode='markdown')
 
-@Client.on_message(filters.command('test'), group=0)
 async def test_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /test received')
     await message.reply_text('✅ Test command received!')
 
-@Client.on_callback_query(filters.regex('^menu:open$'))
 async def menu_open_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 menu:open callback')
     await query.message.edit_text('**📋 Control Panel**', reply_markup=build_menu(), parse_mode='markdown')
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^(?!menu)[a-z]+:open$'))
 async def panel_open_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 %s callback', query.data)
     module = query.data.split(':')[0]
@@ -117,25 +111,21 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
     await query.message.edit_text(f'**🔧 {module.title()} Panel**', reply_markup=markup, parse_mode='markdown')
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^main:menu$'))
 async def menu_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 main:menu callback')
     await query.message.edit_text('**📋 Control Panel**', reply_markup=build_menu(), parse_mode='markdown')
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^menu:close$'))
 async def close_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 menu:close callback')
     await query.message.delete()
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^main:close$'))
 async def close_main_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 main:close callback')
     await query.message.delete()
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^help:.+'))
 async def help_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 %s callback', query.data)
     mod = query.data.split(':')[1]
@@ -145,3 +135,16 @@ async def help_cb(client: Client, query: CallbackQuery):
     text = HELP_MODULES.get(mod, '❌ Module not found.')
     await query.message.edit_text(text, reply_markup=help_menu(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(start_cmd, filters.command('start')), group=0)
+    app.add_handler(MessageHandler(menu_cmd, filters.command('menu')), group=0)
+    app.add_handler(MessageHandler(help_cmd, filters.command('help')), group=0)
+    app.add_handler(MessageHandler(test_cmd, filters.command('test')), group=0)
+    app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex('^menu:open$')), group=0)
+    app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex('^(?!menu)[a-z]+:open$')), group=0)
+    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex('^main:menu$')), group=0)
+    app.add_handler(CallbackQueryHandler(close_cb, filters.regex('^menu:close$')), group=0)
+    app.add_handler(CallbackQueryHandler(close_main_cb, filters.regex('^main:close$')), group=0)
+    app.add_handler(CallbackQueryHandler(help_cb, filters.regex('^help:.+')), group=0)

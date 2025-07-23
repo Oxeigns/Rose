@@ -6,7 +6,6 @@ import time
 FLOOD_LIMIT = {}
 MSG_COUNT = {}
 
-@Client.on_message(filters.command('setflood') & filters.group)
 @admin_required
 async def set_flood_limit(client: Client, message: Message):
     if len(message.command) < 2:
@@ -22,7 +21,6 @@ async def set_flood_limit(client: Client, message: Message):
     FLOOD_LIMIT[message.chat.id] = count
     await message.reply_text(f'✅ Flood limit set to `{count}` messages per 5 seconds.')
 
-@Client.on_message(filters.command('flood') & filters.group)
 @admin_required
 async def get_flood_limit(client: Client, message: Message):
     limit = FLOOD_LIMIT.get(message.chat.id)
@@ -31,7 +29,6 @@ async def get_flood_limit(client: Client, message: Message):
     else:
         await message.reply_text('🚫 No flood limit is currently set for this chat.')
 
-@Client.on_message(filters.text & filters.group & ~filters.service)
 async def flood_checker(client: Client, message: Message):
     limit = FLOOD_LIMIT.get(message.chat.id)
     if not limit or not message.from_user:
@@ -49,3 +46,9 @@ async def flood_checker(client: Client, message: Message):
             await message.delete()
         except Exception:
             pass
+
+
+def register(app):
+    app.add_handler(MessageHandler(set_flood_limit, filters.command('setflood') & filters.group), group=0)
+    app.add_handler(MessageHandler(get_flood_limit, filters.command('flood') & filters.group), group=0)
+    app.add_handler(MessageHandler(flood_checker, filters.text & filters.group & ~filters.service), group=0)

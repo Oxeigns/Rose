@@ -5,7 +5,6 @@ from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
 from modules.buttons.admin import admin_panel
 
-@Client.on_message(filters.command('promote') & filters.group)
 @is_admin
 async def promote(client: Client, message: Message):
     if not message.reply_to_message:
@@ -17,7 +16,6 @@ async def promote(client: Client, message: Message):
     except Exception as e:
         await message.reply_text(f'❌ Failed to promote: `{e}`')
 
-@Client.on_message(filters.command('demote') & filters.group)
 @is_admin
 async def demote(client: Client, message: Message):
     if not message.reply_to_message:
@@ -29,7 +27,6 @@ async def demote(client: Client, message: Message):
     except Exception as e:
         await message.reply_text(f'❌ Failed to demote: `{e}`')
 
-@Client.on_message(filters.command('adminlist') & filters.group)
 @is_admin
 async def adminlist(client: Client, message: Message):
     try:
@@ -41,12 +38,10 @@ async def adminlist(client: Client, message: Message):
     except Exception as e:
         await message.reply_text(f'Error fetching admins: `{e}`')
 
-@Client.on_message(filters.command('admincache') & filters.group)
 @is_admin
 async def admincache(client: Client, message: Message):
     await message.reply_text('🔄 Admin cache has been refreshed.')
 
-@Client.on_message(filters.command('anonadmin') & filters.group)
 @is_admin
 async def anonadmin(client: Client, message: Message):
     args = message.command
@@ -61,7 +56,6 @@ async def anonadmin(client: Client, message: Message):
     set_chat_setting(message.chat.id, 'anonadmin', value)
     await message.reply_text(f'✅ Anon admin setting updated to `{value}`.')
 
-@Client.on_message(filters.command('adminerror') & filters.group)
 @is_admin
 async def adminerror(client: Client, message: Message):
     args = message.command
@@ -76,12 +70,10 @@ async def adminerror(client: Client, message: Message):
     set_chat_setting(message.chat.id, 'adminerror', value)
     await message.reply_text(f'✅ Admin error setting updated to `{value}`.')
 
-@Client.on_message(filters.command('admin') & filters.group)
 @is_admin
 async def admin_menu(client: Client, message: Message):
     await message.reply_text('**🛠 Admin Panel**\nChoose what you want to manage:', reply_markup=admin_panel(), parse_mode='markdown')
 
-@Client.on_callback_query(filters.regex('^admin:(?!open$).+'))
 async def admin_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'promote':
@@ -94,3 +86,14 @@ async def admin_cb(client: Client, query: CallbackQuery):
         text = 'Unknown command.'
     await query.message.edit_text(text, reply_markup=admin_panel(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(promote, filters.command('promote') & filters.group), group=0)
+    app.add_handler(MessageHandler(demote, filters.command('demote') & filters.group), group=0)
+    app.add_handler(MessageHandler(adminlist, filters.command('adminlist') & filters.group), group=0)
+    app.add_handler(MessageHandler(admincache, filters.command('admincache') & filters.group), group=0)
+    app.add_handler(MessageHandler(anonadmin, filters.command('anonadmin') & filters.group), group=0)
+    app.add_handler(MessageHandler(adminerror, filters.command('adminerror') & filters.group), group=0)
+    app.add_handler(MessageHandler(admin_menu, filters.command('admin') & filters.group), group=0)
+    app.add_handler(CallbackQueryHandler(admin_cb, filters.regex('^admin:(?!open$).+')), group=0)

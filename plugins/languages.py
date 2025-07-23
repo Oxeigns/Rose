@@ -5,13 +5,11 @@ from utils.decorators import admin_required
 from utils.db import get_chat_setting, set_chat_setting
 SUPPORTED_LANGUAGES = {'en': 'English 🇬🇧', 'hi': 'Hindi 🇮🇳', 'es': 'Spanish 🇪🇸', 'fr': 'French 🇫🇷', 'ar': 'Arabic 🇸🇦'}
 
-@Client.on_message(filters.command('languages') & filters.group)
 async def show_languages(client: Client, message: Message):
     current = get_chat_setting(message.chat.id, 'lang', 'en')
     langs = '\n'.join((f'• `{code}` - {name}' for code, name in SUPPORTED_LANGUAGES.items()))
     await message.reply_text(f'**🌐 Current Language:** `{current}`\n\n**Available Languages:**\n{langs}\n\nTo change: `/setlang <code>`', parse_mode='markdown')
 
-@Client.on_message(filters.command('setlang') & filters.group)
 @admin_required
 async def set_language(client: Client, message: Message):
     if len(message.command) < 2:
@@ -23,3 +21,8 @@ async def set_language(client: Client, message: Message):
         return
     set_chat_setting(message.chat.id, 'lang', code)
     await message.reply_text(f'✅ Language set to `{SUPPORTED_LANGUAGES[code]}`', parse_mode='markdown')
+
+
+def register(app):
+    app.add_handler(MessageHandler(show_languages, filters.command('languages') & filters.group), group=0)
+    app.add_handler(MessageHandler(set_language, filters.command('setlang') & filters.group), group=0)

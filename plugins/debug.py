@@ -6,7 +6,6 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.info("🔧 Debug plugin loaded")
 
 
-@Client.on_message(filters.group | filters.private, group=-2)
 async def log_all_messages(client: Client, message: Message) -> None:
     user = message.from_user
     chat = message.chat
@@ -24,7 +23,6 @@ async def log_all_messages(client: Client, message: Message) -> None:
     )
 
 
-@Client.on_callback_query(group=-2)
 async def log_queries(client: Client, query: CallbackQuery) -> None:
     user = query.from_user
     chat = query.message.chat if query.message else None
@@ -41,7 +39,6 @@ async def log_queries(client: Client, query: CallbackQuery) -> None:
     )
 
 
-@Client.on_message(filters.all, group=-1)
 async def debug_catch_all(client: Client, message: Message) -> None:
     """Log any received message to confirm update reception."""
     LOGGER.debug(
@@ -51,3 +48,9 @@ async def debug_catch_all(client: Client, message: Message) -> None:
         message.chat.title if message.chat else "Private",
         message.chat.id if message.chat else "N/A",
     )
+
+
+def register(app):
+    app.add_handler(MessageHandler(log_all_messages, filters.group | filters.private), group=-2)
+    app.add_handler(CallbackQueryHandler(log_queries), group=-2)
+    app.add_handler(MessageHandler(debug_catch_all, filters.all), group=-1)

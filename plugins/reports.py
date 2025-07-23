@@ -10,7 +10,6 @@ report_filter = filters.group & filters.reply & filters.text & (
     filters.regex(r"(?i)^@admin$") | filters.command("report")
 )
 
-@Client.on_message(report_filter)
 async def handle_report(client: Client, message: Message):
     reported_msg = message.reply_to_message
     reporter = message.from_user
@@ -36,3 +35,7 @@ async def get_admin_ids(client, chat_id):
         return [admin.user.id for admin in admins if not admin.user.is_bot]
     except:
         return []
+
+
+def register(app):
+    app.add_handler(MessageHandler(handle_report, report_filter), group=0)

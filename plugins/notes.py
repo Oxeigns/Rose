@@ -14,7 +14,6 @@ def _get_note(chat_id: int, name: str):
     row = cur.fetchone()
     return row[0] if row else None
 
-@Client.on_message(filters.command('save') & filters.group)
 @admin_required
 async def save_note(client: Client, message: Message):
     if len(message.command) < 2:
@@ -33,7 +32,6 @@ async def save_note(client: Client, message: Message):
     conn.commit()
     await message.reply('✅ Saved note.')
 
-@Client.on_message(filters.command('clear') & filters.group)
 @admin_required
 async def clear_note(client: Client, message: Message):
     if len(message.command) < 2:
@@ -45,7 +43,6 @@ async def clear_note(client: Client, message: Message):
     conn.commit()
     await message.reply('🗑️ Note deleted.')
 
-@Client.on_message(filters.command(['notes', 'saved']) & filters.group)
 async def list_notes(client: Client, message: Message):
     cur = conn.cursor()
     cur.execute('SELECT name FROM notes WHERE chat_id=? ORDER BY name', (message.chat.id,))
@@ -56,7 +53,6 @@ async def list_notes(client: Client, message: Message):
         text = '**📝 Saved Notes:**\n' + '\n'.join((f'• `{n[0]}`' for n in rows))
         await message.reply(text, reply_markup=notes_panel(), parse_mode='markdown')
 
-@Client.on_message(filters.command('clearall') & filters.group)
 @admin_required
 async def clear_all_notes(client: Client, message: Message):
     cur = conn.cursor()
@@ -64,7 +60,6 @@ async def clear_all_notes(client: Client, message: Message):
     conn.commit()
     await message.reply('🗑️ All notes cleared.')
 
-@Client.on_message(filters.command('privatenotes') & filters.group)
 @admin_required
 async def private_notes_toggle(client: Client, message: Message):
     current = get_chat_setting(message.chat.id, 'privatenotes', 'off')
@@ -72,7 +67,6 @@ async def private_notes_toggle(client: Client, message: Message):
     set_chat_setting(message.chat.id, 'privatenotes', new)
     await message.reply(f'🔒 Private notes are now `{new}`.', parse_mode='markdown')
 
-@Client.on_message(filters.command('get') & filters.group)
 async def get_note_cmd(client: Client, message: Message):
     if len(message.command) < 2:
         await message.reply('Usage: `/get <name>`', parse_mode='markdown')
@@ -88,7 +82,6 @@ async def get_note_cmd(client: Client, message: Message):
     else:
         await message.reply('❌ Note not found.')
 
-@Client.on_message(filters.text & filters.group)
 async def get_note_hash(client: Client, message: Message):
     if not message.text or not message.text.startswith('#'):
         return
@@ -100,7 +93,6 @@ async def get_note_hash(client: Client, message: Message):
         else:
             await message.reply(content)
 
-@Client.on_callback_query(filters.regex('^notes:(?!open$)'))
 async def notes_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'example':
@@ -108,3 +100,14 @@ async def notes_cb(client: Client, query: CallbackQuery):
     elif data == 'format':
         await query.message.edit_text('**📎 Formatting Guide**\n- Markdown supported\n- Buttons via `[text](url)` allowed.', reply_markup=notes_panel(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(save_note, filters.command('save') & filters.group), group=0)
+    app.add_handler(MessageHandler(clear_note, filters.command('clear') & filters.group), group=0)
+    app.add_handler(MessageHandler(list_notes, filters.command(['notes', 'saved']) & filters.group), group=0)
+    app.add_handler(MessageHandler(clear_all_notes, filters.command('clearall') & filters.group), group=0)
+    app.add_handler(MessageHandler(private_notes_toggle, filters.command('privatenotes') & filters.group), group=0)
+    app.add_handler(MessageHandler(get_note_cmd, filters.command('get') & filters.group), group=0)
+    app.add_handler(MessageHandler(get_note_hash, filters.text & filters.group), group=0)
+    app.add_handler(CallbackQueryHandler(notes_cb, filters.regex('^notes:(?!open$)')), group=0)
