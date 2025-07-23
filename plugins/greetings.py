@@ -4,7 +4,6 @@ from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 
-@Client.on_message(filters.command('setwelcome') & filters.group)
 @admin_required
 async def set_welcome(client: Client, message: Message):
     if len(message.command) < 2:
@@ -14,7 +13,6 @@ async def set_welcome(client: Client, message: Message):
     set_chat_setting(message.chat.id, 'welcome', text)
     await message.reply_text('✅ Welcome message set.', parse_mode='markdown')
 
-@Client.on_message(filters.command('setgoodbye') & filters.group)
 @admin_required
 async def set_goodbye(client: Client, message: Message):
     if len(message.command) < 2:
@@ -24,7 +22,6 @@ async def set_goodbye(client: Client, message: Message):
     set_chat_setting(message.chat.id, 'goodbye', text)
     await message.reply_text('👋 Goodbye message set.', parse_mode='markdown')
 
-@Client.on_message(filters.command('greetings') & filters.group)
 async def show_greetings(client: Client, message: Message):
     welcome = get_chat_setting(message.chat.id, 'welcome', 'Not set.')
     goodbye = get_chat_setting(message.chat.id, 'goodbye', 'Not set.')
@@ -33,7 +30,6 @@ async def show_greetings(client: Client, message: Message):
     msg += f'• **Goodbye:** `{goodbye}`'
     await message.reply_text(msg, parse_mode='markdown')
 
-@Client.on_message(filters.new_chat_members)
 async def greet_new_members(client: Client, message: Message):
     text_template = get_chat_setting(message.chat.id, 'welcome')
     if not text_template:
@@ -42,7 +38,6 @@ async def greet_new_members(client: Client, message: Message):
         text = format_greeting(text_template, user, message.chat.title)
         await message.reply_text(text, parse_mode='markdown')
 
-@Client.on_message(filters.left_chat_member)
 async def farewell_user(client: Client, message: Message):
     text_template = get_chat_setting(message.chat.id, 'goodbye')
     if not text_template:
@@ -56,3 +51,11 @@ def format_greeting(template: str, user, chat_title: str) -> str:
     mention = user.mention or f'[{first}](tg://user?id={user.id})'
     username = f'@{user.username}' if user.username else 'N/A'
     return template.format(first=first, mention=mention, username=username, id=user.id, chat=chat_title)
+
+
+def register(app):
+    app.add_handler(MessageHandler(set_welcome, filters.command('setwelcome') & filters.group), group=0)
+    app.add_handler(MessageHandler(set_goodbye, filters.command('setgoodbye') & filters.group), group=0)
+    app.add_handler(MessageHandler(show_greetings, filters.command('greetings') & filters.group), group=0)
+    app.add_handler(MessageHandler(greet_new_members, filters.new_chat_members), group=0)
+    app.add_handler(MessageHandler(farewell_user, filters.left_chat_member), group=0)

@@ -11,6 +11,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pyrogram import Client, idle
 
+from plugins import register_all
+
 from db import init_db
 
 # -------------------------------------------------------------
@@ -54,13 +56,12 @@ API_ID = int(API_ID)
 # -------------------------------------------------------------
 # Bot Client with plugin support
 # -------------------------------------------------------------
-# IMPORTANT: 'Rose.plugins' must match the real directory structure.
+# IMPORTANT: Handlers are registered manually via the plugins package.
 app = Client(
     "rose_bot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
-    plugins=dict(root="plugins"),
 )
 
 
@@ -86,6 +87,8 @@ def _delete_webhook() -> None:
 # -------------------------------------------------------------
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
+
+    register_all(app)
 
     await asyncio.to_thread(_delete_webhook)
 

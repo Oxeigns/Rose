@@ -5,7 +5,6 @@ from utils.db import set_chat_setting, get_chat_setting
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from modules.buttons.rules import rules_panel
 
-@Client.on_message(filters.command('rules') & (filters.group | filters.private))
 async def rules_cmd(client, message):
     cid = message.chat.id if message.chat.type != 'private' else message.from_user.id
     rules = get_chat_setting(cid, 'rules_text', '⚠️ No rules set.')
@@ -21,7 +20,6 @@ async def rules_cmd(client, message):
     markup = InlineKeyboardMarkup([[InlineKeyboardButton(button, callback_data='rules:back')]]) if button else None
     await message.reply(rules, reply_markup=markup, disable_web_page_preview=True)
 
-@Client.on_message(filters.command('setrules') & filters.group)
 @admin_required
 async def setrules_cmd(client, message):
     if len(message.command) < 2 and (not message.reply_to_message):
@@ -31,7 +29,6 @@ async def setrules_cmd(client, message):
     set_chat_setting(message.chat.id, 'rules_text', text)
     await message.reply('✅ Rules updated.')
 
-@Client.on_message(filters.command('privaterules') & filters.group)
 @admin_required
 async def private_rules_cmd(client, message):
     current = get_chat_setting(message.chat.id, 'privaterules', 'off')
@@ -39,13 +36,11 @@ async def private_rules_cmd(client, message):
     set_chat_setting(message.chat.id, 'privaterules', new)
     await message.reply(f"📥 Rules will now be sent in {('PM' if new == 'on' else 'chat')}.")
 
-@Client.on_message(filters.command('resetrules') & filters.group)
 @admin_required
 async def reset_rules_cmd(client, message):
     set_chat_setting(message.chat.id, 'rules_text', None)
     await message.reply('🗑️ Rules have been cleared.')
 
-@Client.on_message(filters.command('setrulesbutton') & filters.group)
 @admin_required
 async def set_rules_button(client, message):
     if len(message.command) < 2:
@@ -55,19 +50,16 @@ async def set_rules_button(client, message):
     set_chat_setting(message.chat.id, 'rules_button', label)
     await message.reply('✅ Rules button label updated.')
 
-@Client.on_message(filters.command('resetrulesbutton') & filters.group)
 @admin_required
 async def reset_rules_button(client, message):
     set_chat_setting(message.chat.id, 'rules_button', None)
     await message.reply('🗑️ Rules button removed.')
 
-@Client.on_callback_query(filters.regex('^rules:back'))
 async def rules_back(client, query):
     rules = get_chat_setting(query.message.chat.id, 'rules_text', '⚠️ No rules set.')
     await query.message.edit(rules)
     await query.answer()
 
-@Client.on_callback_query(filters.regex('^rules:(?!open$).+'))
 async def rules_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'view':
@@ -80,3 +72,14 @@ async def rules_cb(client: Client, query: CallbackQuery):
         text = 'Unknown command.'
     await query.message.edit_text(text, reply_markup=rules_panel(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(rules_cmd, filters.command('rules') & (filters.group | filters.private)), group=0)
+    app.add_handler(MessageHandler(setrules_cmd, filters.command('setrules') & filters.group), group=0)
+    app.add_handler(MessageHandler(private_rules_cmd, filters.command('privaterules') & filters.group), group=0)
+    app.add_handler(MessageHandler(reset_rules_cmd, filters.command('resetrules') & filters.group), group=0)
+    app.add_handler(MessageHandler(set_rules_button, filters.command('setrulesbutton') & filters.group), group=0)
+    app.add_handler(MessageHandler(reset_rules_button, filters.command('resetrulesbutton') & filters.group), group=0)
+    app.add_handler(CallbackQueryHandler(rules_back, filters.regex('^rules:back')), group=0)
+    app.add_handler(CallbackQueryHandler(rules_cb, filters.regex('^rules:(?!open$).+')), group=0)

@@ -4,7 +4,6 @@ from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 CONNECTIONS = {}
 
-@Client.on_message(filters.command('connect') & filters.group)
 @admin_required
 async def connect_group(client: Client, message: Message):
     user_id = message.from_user.id
@@ -12,7 +11,6 @@ async def connect_group(client: Client, message: Message):
     CONNECTIONS[user_id] = chat_id
     await message.reply_text('🔗 Group connected! You can now use group commands in private chat.')
 
-@Client.on_message(filters.command('disconnect') & filters.group)
 @admin_required
 async def disconnect_group(client: Client, message: Message):
     user_id = message.from_user.id
@@ -22,7 +20,6 @@ async def disconnect_group(client: Client, message: Message):
     else:
         await message.reply_text('You’re not connected to this group.')
 
-@Client.on_message(filters.command('connections') & filters.private)
 async def show_connection(client: Client, message: Message):
     user_id = message.from_user.id
     chat_id = CONNECTIONS.get(user_id)
@@ -37,3 +34,9 @@ async def show_connection(client: Client, message: Message):
 
 def get_user_connection(user_id: int) -> int | None:
     return CONNECTIONS.get(user_id)
+
+
+def register(app):
+    app.add_handler(MessageHandler(connect_group, filters.command('connect') & filters.group), group=0)
+    app.add_handler(MessageHandler(disconnect_group, filters.command('disconnect') & filters.group), group=0)
+    app.add_handler(MessageHandler(show_connection, filters.command('connections') & filters.private), group=0)

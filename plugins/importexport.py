@@ -5,14 +5,12 @@ from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import export_chat_data, import_chat_data
 
-@Client.on_message(filters.command('export') & filters.group)
 @admin_required
 async def export_data(client: Client, message: Message):
     data = await export_chat_data(message.chat.id)
     json_data = json.dumps(data, indent=2)
     await message.reply_document(document=('export.json', json_data.encode()), caption='📦 Exported group data (notes, filters, warns, etc.)')
 
-@Client.on_message(filters.command('import') & filters.group)
 @admin_required
 async def import_data(client: Client, message: Message):
     if not message.reply_to_message or not message.reply_to_message.document:
@@ -32,7 +30,12 @@ async def import_data(client: Client, message: Message):
     count = await import_chat_data(message.chat.id, data)
     await message.reply(f'✅ Imported `{count}` items successfully.', parse_mode='markdown')
 
-@Client.on_message(filters.command('importexport') & filters.group)
 async def importexport_help(client: Client, message: Message):
     text = '**📤 Import & Export Help**\n\n`/export` - Get current group settings as `.json`\n`/import` - Reply to a `.json` file to restore settings\n\n_Only group admins can use this. Useful for backups and moving data._'
     await message.reply_text(text, parse_mode='markdown')
+
+
+def register(app):
+    app.add_handler(MessageHandler(export_data, filters.command('export') & filters.group), group=0)
+    app.add_handler(MessageHandler(import_data, filters.command('import') & filters.group), group=0)
+    app.add_handler(MessageHandler(importexport_help, filters.command('importexport') & filters.group), group=0)

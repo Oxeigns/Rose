@@ -9,7 +9,6 @@ from db.broadcast import get_broadcast_groups, get_broadcast_users
 from utils.errors import catch_errors
 logger = logging.getLogger(__name__)
 
-@Client.on_message(filters.command('broadcast') & filters.user(OWNER_ID))
 @catch_errors
 async def broadcast_cmd(client: Client, message: Message) -> None:
     """
@@ -61,3 +60,7 @@ async def broadcast_cmd(client: Client, message: Message) -> None:
             failed += 1
         await asyncio.sleep(0.1)
     await message.reply_text(f'📢 <b>Broadcast Summary</b>\n\n✅ Sent: <b>{sent}</b>\n❌ Failed: <b>{failed}</b>', parse_mode=ParseMode.HTML)
+
+
+def register(app):
+    app.add_handler(MessageHandler(broadcast_cmd, filters.command('broadcast') & filters.user(OWNER_ID)), group=0)

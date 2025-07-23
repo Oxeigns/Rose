@@ -97,7 +97,6 @@ async def schedule_auto_delete(client: Client, chat_id: int, msg_id: int, fallba
     if delay > 0:
         asyncio.create_task(delete_later(client, chat_id, msg_id, delay))
 
-@Client.on_message(filters.group & ~filters.service, group=1)
 @catch_errors
 async def moderate_message(client: Client, message: Message) -> None:
     if not message.from_user or message.from_user.is_bot:
@@ -123,7 +122,6 @@ async def moderate_message(client: Client, message: Message) -> None:
     if needs_filtering:
         await schedule_auto_delete(client, chat_id, message.id)
 
-@Client.on_edited_message(filters.group & ~filters.service, group=1)
 @catch_errors
 async def on_edit(client: Client, message: Message):
     if not message.from_user or message.from_user.is_bot:
@@ -139,7 +137,6 @@ async def on_edit(client: Client, message: Message):
         edited_messages.add(key)
         await schedule_auto_delete(client, chat_id, message.id, fallback=0)
 
-@Client.on_message(filters.new_chat_members & filters.group, group=1)
 @catch_errors
 async def check_new_member_bio(client: Client, message: Message):
     chat_id = message.chat.id
@@ -151,3 +148,9 @@ async def check_new_member_bio(client: Client, message: Message):
         if await is_admin(client, message, user.id) or await is_approved(chat_id, user.id):
             continue
         await bio_link_violation(client, message, user, chat_id)
+
+
+def register(app):
+    app.add_handler(MessageHandler(moderate_message, filters.group & ~filters.service), group=1)
+    app.add_handler(EditedMessageHandler(on_edit, filters.group & ~filters.service), group=1)
+    app.add_handler(MessageHandler(check_new_member_bio, filters.new_chat_members & filters.group), group=1)

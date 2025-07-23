@@ -5,7 +5,6 @@ from utils.decorators import admin_required
 from utils.db import get_chat_setting, set_chat_setting
 import asyncio
 
-@Client.on_message(filters.command('cleancommand') & filters.group)
 @admin_required
 async def set_clean(client: Client, message: Message):
     if len(message.command) < 2:
@@ -26,13 +25,11 @@ async def set_clean(client: Client, message: Message):
         set_chat_setting(message.chat.id, 'clean_delay', str(delay))
         await message.reply_text(f'🧼 Commands will be deleted after `{delay}` seconds.', parse_mode='markdown')
 
-@Client.on_message(filters.command('keepcommand') & filters.group)
 @admin_required
 async def keep_command(client: Client, message: Message):
     set_chat_setting(message.chat.id, 'clean_delay', '0')
     await message.reply_text('✅ Command cleaning has been *turned off*.')
 
-@Client.on_message(filters.regex('^/') & (filters.group | filters.private), group=-1)
 async def auto_clean(client: Client, message: Message):
     delay = get_chat_setting(message.chat.id, 'clean_delay', '0')
     try:
@@ -45,3 +42,9 @@ async def auto_clean(client: Client, message: Message):
             await message.delete()
         except Exception:
             pass
+
+
+def register(app):
+    app.add_handler(MessageHandler(set_clean, filters.command('cleancommand') & filters.group), group=0)
+    app.add_handler(MessageHandler(keep_command, filters.command('keepcommand') & filters.group), group=0)
+    app.add_handler(MessageHandler(auto_clean, filters.regex('^/') & (filters.group | filters.private)), group=-1)

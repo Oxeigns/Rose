@@ -4,7 +4,6 @@ from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 from utils.markdown import escape_markdown
 
-@Client.on_message(filters.command('pinned') & filters.group)
 async def pinned_cmd(client: Client, message):
     chat = await client.get_chat(message.chat.id)
     if not chat.pinned_message:
@@ -13,7 +12,6 @@ async def pinned_cmd(client: Client, message):
         content = chat.pinned_message.text or chat.pinned_message.caption or '📎 [Media message]'
         await message.reply(f'📌 **Pinned Message:**\n\n{content}', parse_mode='markdown')
 
-@Client.on_message(filters.command('pin') & filters.group)
 @admin_required
 async def pin_cmd(client: Client, message):
     if not message.reply_to_message:
@@ -25,7 +23,6 @@ async def pin_cmd(client: Client, message):
     await message.reply_to_message.pin(disable_notification=not loud)
     await message.reply('📌 Message pinned.')
 
-@Client.on_message(filters.command('permapin') & filters.group)
 @admin_required
 async def permapin_cmd(client: Client, message):
     if len(message.command) < 2:
@@ -36,7 +33,6 @@ async def permapin_cmd(client: Client, message):
     await sent.pin()
     await message.reply('📌 Message sent and pinned.')
 
-@Client.on_message(filters.command('unpin') & filters.group)
 @admin_required
 async def unpin_cmd(client: Client, message):
     if message.reply_to_message:
@@ -46,13 +42,11 @@ async def unpin_cmd(client: Client, message):
         await client.unpin_chat_message(message.chat.id)
         await message.reply('📍 Last pinned message removed.')
 
-@Client.on_message(filters.command('unpinall') & filters.group)
 @admin_required
 async def unpin_all_cmd(client: Client, message):
     await client.unpin_all_chat_messages(message.chat.id)
     await message.reply('🧹 All pinned messages have been removed.')
 
-@Client.on_message(filters.command('antichannelpin') & filters.group)
 @admin_required
 async def antichannelpin_cmd(client: Client, message):
     if len(message.command) == 1:
@@ -68,7 +62,6 @@ async def antichannelpin_cmd(client: Client, message):
     safe_val = escape_markdown(value)
     await message.reply(f'📡 Anti-channel pin set to `{safe_val}`.', parse_mode='markdown')
 
-@Client.on_message(filters.command('cleanlinked') & filters.group)
 @admin_required
 async def cleanlinked_cmd(client: Client, message):
     if len(message.command) == 1:
@@ -83,3 +76,13 @@ async def cleanlinked_cmd(client: Client, message):
     set_chat_setting(message.chat.id, 'cleanlinked', value)
     safe_val = escape_markdown(value)
     await message.reply(f'🧼 Clean linked messages set to `{safe_val}`.', parse_mode='markdown')
+
+
+def register(app):
+    app.add_handler(MessageHandler(pinned_cmd, filters.command('pinned') & filters.group), group=0)
+    app.add_handler(MessageHandler(pin_cmd, filters.command('pin') & filters.group), group=0)
+    app.add_handler(MessageHandler(permapin_cmd, filters.command('permapin') & filters.group), group=0)
+    app.add_handler(MessageHandler(unpin_cmd, filters.command('unpin') & filters.group), group=0)
+    app.add_handler(MessageHandler(unpin_all_cmd, filters.command('unpinall') & filters.group), group=0)
+    app.add_handler(MessageHandler(antichannelpin_cmd, filters.command('antichannelpin') & filters.group), group=0)
+    app.add_handler(MessageHandler(cleanlinked_cmd, filters.command('cleanlinked') & filters.group), group=0)

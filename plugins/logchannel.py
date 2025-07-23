@@ -5,7 +5,6 @@ from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 from utils.markdown import escape_markdown
 
-@Client.on_message(filters.command('logchannel') & filters.group)
 @admin_required
 async def logchannel_handler(client: Client, message: Message):
     if len(message.command) == 1:
@@ -49,3 +48,7 @@ async def send_log(client: Client, chat_id: int, text: str):
         await client.send_message(log_id, text, parse_mode='markdown')
     except Exception:
         pass
+
+
+def register(app):
+    app.add_handler(MessageHandler(logchannel_handler, filters.command('logchannel') & filters.group), group=0)

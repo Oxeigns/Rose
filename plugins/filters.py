@@ -6,7 +6,6 @@ from modules.buttons.filters import filters_panel
 from utils.decorators import is_admin
 from utils.db import add_filter, remove_filter, list_filters, get_filter, clear_filters
 
-@Client.on_message(filters.command('filter') & filters.group)
 @is_admin
 async def add_filter_cmd(client: Client, message: Message):
     if len(message.command) < 3:
@@ -18,7 +17,6 @@ async def add_filter_cmd(client: Client, message: Message):
     safe_key = escape_markdown(keyword)
     await message.reply_text(f'✅ Filter `"{safe_key}"` added.', parse_mode='markdown')
 
-@Client.on_message(filters.command('stop') & filters.group)
 @is_admin
 async def stop_filter_cmd(client: Client, message: Message):
     if len(message.command) < 2:
@@ -29,7 +27,6 @@ async def stop_filter_cmd(client: Client, message: Message):
     safe_key = escape_markdown(keyword)
     await message.reply_text(f'🗑️ Removed filter `"{safe_key}"`.', parse_mode='markdown')
 
-@Client.on_message(filters.command('filters') & filters.group)
 async def list_filters_cmd(client: Client, message: Message):
     words = list_filters(message.chat.id)
     if not words:
@@ -38,13 +35,11 @@ async def list_filters_cmd(client: Client, message: Message):
         text = '**📃 Active Filters:**\n' + '\n'.join((f'• `{w}`' for w in sorted(words)))
         await message.reply_text(text, parse_mode='markdown')
 
-@Client.on_message(filters.command('stopall') & filters.group)
 @is_admin
 async def stopall_cmd(client: Client, message: Message):
     clear_filters(message.chat.id)
     await message.reply_text('🧹 All filters cleared for this chat.')
 
-@Client.on_message(filters.text & filters.group, group=1)
 async def filter_worker(client: Client, message: Message):
     if not message.text or message.text.startswith('/'):
         return
@@ -56,7 +51,6 @@ async def filter_worker(client: Client, message: Message):
                 await message.reply_text(response)
             break
 
-@Client.on_callback_query(filters.regex('^filters:(?!open$).+'))
 async def filters_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'add':
@@ -69,3 +63,12 @@ async def filters_cb(client: Client, query: CallbackQuery):
         text = 'Unknown command.'
     await query.message.edit_text(text, reply_markup=filters_panel(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(add_filter_cmd, filters.command('filter') & filters.group), group=0)
+    app.add_handler(MessageHandler(stop_filter_cmd, filters.command('stop') & filters.group), group=0)
+    app.add_handler(MessageHandler(list_filters_cmd, filters.command('filters') & filters.group), group=0)
+    app.add_handler(MessageHandler(stopall_cmd, filters.command('stopall') & filters.group), group=0)
+    app.add_handler(MessageHandler(filter_worker, filters.text & filters.group), group=1)
+    app.add_handler(CallbackQueryHandler(filters_cb, filters.regex('^filters:(?!open$).+')), group=0)

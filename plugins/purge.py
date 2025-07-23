@@ -3,7 +3,6 @@ from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 purge_points = {}
 
-@Client.on_message(filters.command('purge') & filters.group)
 @admin_required
 async def purge_cmd(client: Client, message):
     if not message.reply_to_message:
@@ -21,7 +20,6 @@ async def purge_cmd(client: Client, message):
     except Exception:
         await message.reply('⚠️ Failed to purge messages.')
 
-@Client.on_message(filters.command('spurge') & filters.group)
 @admin_required
 async def spurge_cmd(client: Client, message):
     if not message.reply_to_message:
@@ -32,7 +30,6 @@ async def spurge_cmd(client: Client, message):
     except Exception:
         pass
 
-@Client.on_message(filters.command('del') & filters.group)
 @admin_required
 async def del_cmd(client: Client, message):
     if message.reply_to_message:
@@ -41,7 +38,6 @@ async def del_cmd(client: Client, message):
         except Exception:
             pass
 
-@Client.on_message(filters.command('purgefrom') & filters.group)
 @admin_required
 async def purge_from_cmd(client: Client, message):
     if not message.reply_to_message:
@@ -50,7 +46,6 @@ async def purge_from_cmd(client: Client, message):
     purge_points[message.chat.id] = message.reply_to_message.id
     await message.reply('✅ Purge start point saved.')
 
-@Client.on_message(filters.command('purgeto') & filters.group)
 @admin_required
 async def purge_to_cmd(client: Client, message):
     start = purge_points.get(message.chat.id)
@@ -64,3 +59,11 @@ async def purge_to_cmd(client: Client, message):
     except Exception:
         await message.reply('⚠️ Failed to purge messages.')
     purge_points.pop(message.chat.id, None)
+
+
+def register(app):
+    app.add_handler(MessageHandler(purge_cmd, filters.command('purge') & filters.group), group=0)
+    app.add_handler(MessageHandler(spurge_cmd, filters.command('spurge') & filters.group), group=0)
+    app.add_handler(MessageHandler(del_cmd, filters.command('del') & filters.group), group=0)
+    app.add_handler(MessageHandler(purge_from_cmd, filters.command('purgefrom') & filters.group), group=0)
+    app.add_handler(MessageHandler(purge_to_cmd, filters.command('purgeto') & filters.group), group=0)

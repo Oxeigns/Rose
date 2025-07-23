@@ -7,7 +7,6 @@ ANTIRAID_STATUS = {}
 JOINS_TIMESTAMPS = {}
 COOLDOWN_DURATION = 30
 
-@Client.on_message(filters.command('antiraid') & filters.group)
 @admin_required
 async def toggle_antiraid(client: Client, message: Message):
     args = message.command
@@ -22,7 +21,6 @@ async def toggle_antiraid(client: Client, message: Message):
     ANTIRAID_STATUS[message.chat.id] = status
     await message.reply_text(f'✅ Antiraid mode set to `{status}`.')
 
-@Client.on_message(filters.new_chat_members)
 async def new_member_joined(client: Client, message: Message):
     chat_id = message.chat.id
     status = ANTIRAID_STATUS.get(chat_id, 'off')
@@ -33,7 +31,6 @@ async def new_member_joined(client: Client, message: Message):
             continue
         JOINS_TIMESTAMPS[chat_id, user.id] = time.time()
 
-@Client.on_message(filters.group & filters.text & ~filters.service)
 async def restrict_new_user(client: Client, message: Message):
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else None
@@ -47,3 +44,9 @@ async def restrict_new_user(client: Client, message: Message):
             await message.delete()
         except Exception:
             pass
+
+
+def register(app):
+    app.add_handler(MessageHandler(toggle_antiraid, filters.command('antiraid') & filters.group), group=0)
+    app.add_handler(MessageHandler(new_member_joined, filters.new_chat_members), group=0)
+    app.add_handler(MessageHandler(restrict_new_user, filters.group & filters.text & ~filters.service), group=0)

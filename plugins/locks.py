@@ -12,7 +12,6 @@ def build_permissions(**kwargs):
         setattr(perms, k, v)
     return perms
 
-@Client.on_message(filters.command('lock') & filters.group)
 @admin_required
 async def lock_cmd(client: Client, message: types.Message):
     if len(message.command) < 2:
@@ -32,7 +31,6 @@ async def lock_cmd(client: Client, message: types.Message):
     await client.set_chat_permissions(message.chat.id, perms)
     await message.reply_text(f'🔒 Locked `{lock_type}`.', parse_mode='markdown')
 
-@Client.on_message(filters.command('unlock') & filters.group)
 @admin_required
 async def unlock_cmd(client: Client, message: types.Message):
     if len(message.command) < 2:
@@ -52,7 +50,6 @@ async def unlock_cmd(client: Client, message: types.Message):
     await client.set_chat_permissions(message.chat.id, perms)
     await message.reply_text(f'🔓 Unlocked `{lock_type}`.', parse_mode='markdown')
 
-@Client.on_callback_query(filters.regex('^lock:(?!open$).+'))
 async def lock_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'lock':
@@ -63,3 +60,9 @@ async def lock_cb(client: Client, query: CallbackQuery):
         text = 'Unknown command.'
     await query.message.edit_text(text, reply_markup=lock_panel(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(lock_cmd, filters.command('lock') & filters.group), group=0)
+    app.add_handler(MessageHandler(unlock_cmd, filters.command('unlock') & filters.group), group=0)
+    app.add_handler(CallbackQueryHandler(lock_cb, filters.regex('^lock:(?!open$).+')), group=0)

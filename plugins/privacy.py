@@ -1,7 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
 
-@Client.on_message(filters.command('privacy'))
 async def privacy_cmd(client: Client, message):
     text = '**🔒 Privacy Policy**\n\nWe only store data required for moderation and functionality, such as:\n- Admin settings\n- Notes or filters saved by admins\n- Warning data\n\nYou can remove your personal data anytime with /delmydata.\nWe value your privacy and do not sell or share your data.'
     if message.chat.type != 'private':
@@ -13,6 +12,10 @@ async def privacy_cmd(client: Client, message):
     else:
         await message.reply(text, parse_mode='markdown')
 
-@Client.on_message(filters.command('delmydata'))
 async def del_my_data(client: Client, message):
     await message.reply('🗑️ Your data has been deleted from our systems (mock response).')
+
+
+def register(app):
+    app.add_handler(MessageHandler(privacy_cmd, filters.command('privacy')), group=0)
+    app.add_handler(MessageHandler(del_my_data, filters.command('delmydata')), group=0)

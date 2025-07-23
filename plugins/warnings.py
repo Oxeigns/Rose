@@ -10,7 +10,6 @@ from pyrogram.types import CallbackQuery
 from modules.buttons.warnings import warnings_panel
 DEFAULT_LIMIT = 3
 
-@Client.on_message(filters.command('warn') & filters.group)
 @is_admin
 async def warn_user(client, message):
     if not message.reply_to_message:
@@ -35,21 +34,18 @@ async def warn_user(client, message):
             await client.unrestrict_chat_member(chat_id, user_id)
         await reset_warns(user_id, chat_id)
 
-@Client.on_message(filters.command('dwarn') & filters.group)
 @is_admin
 async def dwarn_user(client, message):
     if message.reply_to_message:
         await message.reply_to_message.delete()
         await warn_user(client, message)
 
-@Client.on_message(filters.command('swarn') & filters.group)
 @is_admin
 async def swarn_user(client, message):
     if message.reply_to_message:
         await message.reply_to_message.delete()
         await warn_user(client, message)
 
-@Client.on_message(filters.command('softwarn') & filters.group)
 @is_admin
 async def soft_warn(client, message):
     if not message.reply_to_message:
@@ -77,13 +73,11 @@ async def soft_warn(client, message):
             await client.unrestrict_chat_member(chat_id, user_id)
         await reset_warns(user_id, chat_id)
 
-@Client.on_message(filters.command('warns') & filters.group)
 async def warns(client, message):
     user_id = message.reply_to_message.from_user.id if message.reply_to_message else message.from_user.id
     count = await get_warns(user_id, message.chat.id)
     await message.reply(f'⚠️ Current warns: {count}')
 
-@Client.on_message(filters.command('resetwarn') & filters.group)
 @is_admin
 async def resetwarn_cmd(client, message):
     if not message.reply_to_message:
@@ -92,7 +86,6 @@ async def resetwarn_cmd(client, message):
     await reset_warns(message.reply_to_message.from_user.id, message.chat.id)
     await message.reply('✅ Warns reset.')
 
-@Client.on_message(filters.command('rmwarn') & filters.group)
 @is_admin
 async def rmwarn_cmd(client, message):
     if not message.reply_to_message:
@@ -103,7 +96,6 @@ async def rmwarn_cmd(client, message):
     count = await remove_warn(user_id, chat_id)
     await message.reply(f'✅ Removed one warn. Remaining: {count}')
 
-@Client.on_message(filters.command('resetallwarns') & filters.group)
 @is_admin
 async def reset_all_warns(client, message):
     async with aiosqlite.connect(DB_PATH) as db:
@@ -111,14 +103,12 @@ async def reset_all_warns(client, message):
         await db.commit()
     await message.reply('🧹 All warns reset for this chat.')
 
-@Client.on_message(filters.command('warnings') & filters.group)
 async def warnings_settings(client, message):
     limit = get_chat_setting(message.chat.id, 'warn_limit', DEFAULT_LIMIT)
     mode = get_chat_setting(message.chat.id, 'warn_mode', 'ban')
     time_value = get_chat_setting(message.chat.id, 'warn_time', '600')
     await message.reply(f'**Warn Settings:**\nLimit: {limit}\nMode: {mode}\nDuration: {time_value}s')
 
-@Client.on_message(filters.command('warnlimit') & filters.group)
 @is_admin
 async def warnlimit(client, message):
     if len(message.command) == 1:
@@ -132,7 +122,6 @@ async def warnlimit(client, message):
     except ValueError:
         await message.reply('❗ Enter a valid number.')
 
-@Client.on_message(filters.command('warnmode') & filters.group)
 @is_admin
 async def warnmode(client, message):
     if len(message.command) == 1:
@@ -146,7 +135,6 @@ async def warnmode(client, message):
     set_chat_setting(message.chat.id, 'warn_mode', mode)
     await message.reply(f'✅ Warn mode set to {mode}')
 
-@Client.on_message(filters.command('warntime') & filters.group)
 @is_admin
 async def warntime(client, message):
     if len(message.command) == 1:
@@ -160,7 +148,6 @@ async def warntime(client, message):
     except ValueError:
         await message.reply('❗ Enter duration in seconds.')
 
-@Client.on_callback_query(filters.regex('^warnings:(?!open$).+'))
 async def warnings_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'warn':
@@ -173,3 +160,19 @@ async def warnings_cb(client: Client, query: CallbackQuery):
         text = 'Unknown command.'
     await query.message.edit_text(text, reply_markup=warnings_panel(), parse_mode='markdown')
     await query.answer()
+
+
+def register(app):
+    app.add_handler(MessageHandler(warn_user, filters.command('warn') & filters.group), group=0)
+    app.add_handler(MessageHandler(dwarn_user, filters.command('dwarn') & filters.group), group=0)
+    app.add_handler(MessageHandler(swarn_user, filters.command('swarn') & filters.group), group=0)
+    app.add_handler(MessageHandler(soft_warn, filters.command('softwarn') & filters.group), group=0)
+    app.add_handler(MessageHandler(warns, filters.command('warns') & filters.group), group=0)
+    app.add_handler(MessageHandler(resetwarn_cmd, filters.command('resetwarn') & filters.group), group=0)
+    app.add_handler(MessageHandler(rmwarn_cmd, filters.command('rmwarn') & filters.group), group=0)
+    app.add_handler(MessageHandler(reset_all_warns, filters.command('resetallwarns') & filters.group), group=0)
+    app.add_handler(MessageHandler(warnings_settings, filters.command('warnings') & filters.group), group=0)
+    app.add_handler(MessageHandler(warnlimit, filters.command('warnlimit') & filters.group), group=0)
+    app.add_handler(MessageHandler(warnmode, filters.command('warnmode') & filters.group), group=0)
+    app.add_handler(MessageHandler(warntime, filters.command('warntime') & filters.group), group=0)
+    app.add_handler(CallbackQueryHandler(warnings_cb, filters.regex('^warnings:(?!open$).+')), group=0)
