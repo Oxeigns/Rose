@@ -5,6 +5,7 @@ from pyrogram.types import (
     InlineKeyboardMarkup,
     Message,
 )
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from .help import HELP_MODULES
 from modules.buttons import (
     admin_panel,

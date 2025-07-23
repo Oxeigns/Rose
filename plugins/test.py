@@ -1,5 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 
 async def ping_pong(client: Client, message: Message):
     await message.reply_text("pong")

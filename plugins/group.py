@@ -1,6 +1,7 @@
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 from utils.errors import catch_errors
 from db.broadcast import add_user, add_group, remove_group
 logger = logging.getLogger(__name__)
