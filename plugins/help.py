@@ -21,3 +21,8 @@ HELP_MODULES = {
     'pinline': 'Pin messages with an inline button.',
     'reports': 'Report messages to admins.',
 }
+
+
+def register(app) -> None:
+    """This module only provides HELP_MODULES and registers no handlers."""
+    pass
