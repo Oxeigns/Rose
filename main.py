@@ -53,13 +53,15 @@ API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
+# Deployment mode: "worker" for long polling or "webhook" for FastAPI
+DEPLOY_MODE = os.getenv("DEPLOY_MODE", "worker").lower()
+USE_WEBHOOK = DEPLOY_MODE == "webhook"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+PORT = int(os.getenv("PORT", 10000))
 
-if USE_WEBHOOK:
-    if not WEBHOOK_URL:
-        LOGGER.error("USE_WEBHOOK is true but WEBHOOK_URL is not set")
-        raise SystemExit(1)
+if USE_WEBHOOK and not WEBHOOK_URL:
+    LOGGER.error("DEPLOY_MODE=webhook but WEBHOOK_URL is not set")
+    raise SystemExit(1)
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
     LOGGER.error("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.")
@@ -143,6 +145,12 @@ app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 
 
+@app.on_message()
+async def debug_print(client: Client, message) -> None:
+    """Print every incoming message for quick debugging."""
+    print("DEBUG:", message.text or message.caption or "<non-text message>")
+
+
 # -------------------------------------------------------------
 # Delete webhook to enable polling
 # -------------------------------------------------------------
@@ -194,10 +202,6 @@ async def main() -> None:
         LOGGER.exception("❌ Failed loading plugins: %s", e)
         return
 
-    @app.on_message()
-    async def debug_all(client, message):  # pragma: no cover - debug handler
-        print("DEBUG:", message.text)
-
     if USE_WEBHOOK:
         LOGGER.info("🌐 Setting webhook...")
         await asyncio.to_thread(_set_webhook)
@@ -228,16 +232,12 @@ async def main() -> None:
 # -------------------------------------------------------------
 if __name__ == "__main__":
     try:
-        if USE_WEBHOOK:
-            from web import app as web_app
+        if DEPLOY_MODE == "webhook":
+            from web import setup, run
             import threading
 
-            threading.Thread(
-                target=lambda: web_app.run(
-                    host="0.0.0.0", port=int(os.getenv("PORT", 5000))
-                ),
-                daemon=True,
-            ).start()
+            setup(app)
+            threading.Thread(target=run, daemon=True).start()
             asyncio.run(main())
         else:
             asyncio.run(main())

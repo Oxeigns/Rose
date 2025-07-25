@@ -12,7 +12,9 @@ services:
         value: YOUR_API_HASH
       - key: BOT_TOKEN
         value: YOUR_BOT_TOKEN
-      - key: USE_WEBHOOK
-        value: "true"
+      - key: DEPLOY_MODE
+        value: webhook
       - key: WEBHOOK_URL
         value: https://example.com/webhook
+      - key: PORT
+        value: "10000"
