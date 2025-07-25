@@ -1,12 +1,15 @@
-"""Main entrypoint for the Rose Telegram bot."""
+"""Main entrypoint for the Rose Telegram bot.
+
+Set ``DEPLOY_MODE=worker`` to run using long polling (Render background worker).
+Set ``DEPLOY_MODE=webhook`` together with ``WEBHOOK_URL`` to run as a web
+service processing updates via FastAPI.
+"""
 
 import asyncio
 import json
 import logging
 import os
 import sys
-import urllib.request
-import urllib.parse
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -172,38 +175,31 @@ async def log_message(client: Client, message) -> None:
 # -------------------------------------------------------------
 # Delete webhook to enable polling
 # -------------------------------------------------------------
-def _delete_webhook() -> None:
+async def _delete_webhook(client: Client) -> None:
     """Remove any webhook (if set) to enable polling mode."""
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
     LOGGER.debug("🌐 Deleting existing webhook (if any)...")
     try:
-        with urllib.request.urlopen(url) as response:
-            data = json.load(response)
-        if not data.get("ok"):
-            LOGGER.warning("⚠️ Failed to delete webhook: %s", data)
-        else:
+        result = await client.delete_webhook(drop_pending_updates=True)
+        if result:
             LOGGER.info("✅ Webhook deleted successfully.")
+        else:
+            LOGGER.warning("⚠️ Failed to delete webhook via Bot API")
     except Exception as e:
         LOGGER.warning("⚠️ Exception while deleting webhook: %s", e)
 
 
-def _set_webhook() -> None:
+async def _set_webhook(client: Client) -> None:
     """Set webhook for Bot API mode."""
     if not WEBHOOK_URL:
         LOGGER.error("WEBHOOK_URL not provided")
         return
-    url = (
-        f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook"
-        f"?url={urllib.parse.quote(WEBHOOK_URL)}"
-    )
     LOGGER.debug("🌐 Setting webhook to %s", WEBHOOK_URL)
     try:
-        with urllib.request.urlopen(url) as response:
-            data = json.load(response)
-        if not data.get("ok"):
-            LOGGER.warning("⚠️ Failed to set webhook: %s", data)
-        else:
+        result = await client.set_webhook(WEBHOOK_URL)
+        if result:
             LOGGER.info("✅ Webhook set successfully.")
+        else:
+            LOGGER.warning("⚠️ Failed to set webhook via Bot API")
     except Exception as e:
         LOGGER.warning("⚠️ Exception while setting webhook: %s", e)
 
@@ -220,18 +216,18 @@ async def main() -> None:
         LOGGER.exception("❌ Failed loading plugins: %s", e)
         return
 
-    if USE_WEBHOOK:
-        LOGGER.info("🌐 Setting webhook...")
-        await asyncio.to_thread(_set_webhook)
-    else:
-        LOGGER.info("🌐 Deleting existing webhook (if any)...")
-        await asyncio.to_thread(_delete_webhook)
-
-    LOGGER.debug("📚 Initializing database...")
-    await init_db()
-    LOGGER.info("✅ Database ready")
-
     async with app:
+        if USE_WEBHOOK:
+            LOGGER.info("🌐 Setting webhook...")
+            await _set_webhook(app)
+        else:
+            LOGGER.info("🌐 Deleting existing webhook (if any)...")
+            await _delete_webhook(app)
+
+        LOGGER.debug("📚 Initializing database...")
+        await init_db()
+        LOGGER.info("✅ Database ready")
+
         handler_count = sum(len(g) for g in app.dispatcher.groups.values())
         LOGGER.info(
             "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
@@ -242,6 +238,8 @@ async def main() -> None:
         LOGGER.info(
             "🤖 Bot started in %s mode", "Webhook" if USE_WEBHOOK else "Polling"
         )
+        LOGGER.info("✅ Bot is ready to receive updates")
+
         await idle()
 
     LOGGER.info("✅ Bot stopped cleanly.")
