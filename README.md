@@ -18,13 +18,18 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
    ```bash
    python main.py
    ```
-   The bot will exit with an error message if any required credential is missing.
-   All logs are output at the DEBUG level for easy diagnostics.
+    The bot will exit with an error message if any required credential is missing.
+    All logs are output at the DEBUG level for easy diagnostics.
+
+Set `DEPLOY_MODE=worker` to run the bot with long polling. For webhook mode
+(`DEPLOY_MODE=webhook`), also set `WEBHOOK_URL` and `PORT` so the FastAPI
+server can listen on `0.0.0.0:10000` and Telegram can reach your endpoint.
 
 ## Deployment
 Example files are provided for running on container platforms:
 - `Dockerfile` for Docker based deployments
-- `Procfile` and `render-worker.yaml`/`render-web.yaml` for hosting services
+- `Procfile` for Heroku style platforms
+- `render.yaml` includes both worker and webhook services for Render
 
 ---
 Licensed under the MIT License.
