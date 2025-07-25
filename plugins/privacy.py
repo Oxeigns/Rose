@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 
 async def privacy_cmd(client: Client, message):
@@ -17,5 +18,5 @@ async def del_my_data(client: Client, message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(privacy_cmd, filters.command('privacy')), group=0)
-    app.add_handler(MessageHandler(del_my_data, filters.command('delmydata')), group=0)
+    app.add_handler(MessageHandler(privacy_cmd, filters.command('privacy', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(del_my_data, filters.command('delmydata', prefixes=PREFIXES)), group=0)

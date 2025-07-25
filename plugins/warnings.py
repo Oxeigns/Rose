@@ -1,5 +1,6 @@
 import asyncio
 from pyrogram import Client, filters, types
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import is_admin
 from utils.db import set_chat_setting, get_chat_setting
@@ -163,16 +164,16 @@ async def warnings_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(warn_user, filters.command('warn') & filters.group), group=0)
-    app.add_handler(MessageHandler(dwarn_user, filters.command('dwarn') & filters.group), group=0)
-    app.add_handler(MessageHandler(swarn_user, filters.command('swarn') & filters.group), group=0)
-    app.add_handler(MessageHandler(soft_warn, filters.command('softwarn') & filters.group), group=0)
-    app.add_handler(MessageHandler(warns, filters.command('warns') & filters.group), group=0)
-    app.add_handler(MessageHandler(resetwarn_cmd, filters.command('resetwarn') & filters.group), group=0)
-    app.add_handler(MessageHandler(rmwarn_cmd, filters.command('rmwarn') & filters.group), group=0)
-    app.add_handler(MessageHandler(reset_all_warns, filters.command('resetallwarns') & filters.group), group=0)
-    app.add_handler(MessageHandler(warnings_settings, filters.command('warnings') & filters.group), group=0)
-    app.add_handler(MessageHandler(warnlimit, filters.command('warnlimit') & filters.group), group=0)
-    app.add_handler(MessageHandler(warnmode, filters.command('warnmode') & filters.group), group=0)
-    app.add_handler(MessageHandler(warntime, filters.command('warntime') & filters.group), group=0)
+    app.add_handler(MessageHandler(warn_user, filters.command('warn', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(dwarn_user, filters.command('dwarn', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(swarn_user, filters.command('swarn', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(soft_warn, filters.command('softwarn', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(warns, filters.command('warns', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(resetwarn_cmd, filters.command('resetwarn', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(rmwarn_cmd, filters.command('rmwarn', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(reset_all_warns, filters.command('resetallwarns', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(warnings_settings, filters.command('warnings', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(warnlimit, filters.command('warnlimit', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(warnmode, filters.command('warnmode', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(warntime, filters.command('warntime', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(CallbackQueryHandler(warnings_cb, filters.regex('^warnings:(?!open$).+')), group=0)

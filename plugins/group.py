@@ -1,5 +1,6 @@
 import logging
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.errors import catch_errors
@@ -27,6 +28,6 @@ async def bot_removed(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(start_in_private, filters.command('start') & filters.private), group=0)
+    app.add_handler(MessageHandler(start_in_private, filters.command('start', prefixes=PREFIXES) & filters.private), group=0)
     app.add_handler(MessageHandler(bot_added, filters.new_chat_members & filters.group), group=0)
     app.add_handler(MessageHandler(bot_removed, filters.left_chat_member & filters.group), group=0)

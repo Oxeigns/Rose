@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ChatPermissions
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
@@ -52,6 +53,6 @@ async def captcha_verify(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(toggle_captcha, filters.command('captcha') & filters.group), group=0)
+    app.add_handler(MessageHandler(toggle_captcha, filters.command('captcha', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(handle_new_user, filters.new_chat_members), group=0)
     app.add_handler(CallbackQueryHandler(captcha_verify, filters.regex('^cverify:(\\d+)$')), group=0)

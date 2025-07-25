@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -51,4 +52,4 @@ async def send_log(client: Client, chat_id: int, text: str):
 
 
 def register(app):
-    app.add_handler(MessageHandler(logchannel_handler, filters.command('logchannel') & filters.group), group=0)
+    app.add_handler(MessageHandler(logchannel_handler, filters.command('logchannel', prefixes=PREFIXES) & filters.group), group=0)

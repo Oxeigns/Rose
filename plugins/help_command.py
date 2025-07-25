@@ -3,7 +3,8 @@
 from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
 
-from .start import help_cmd, PREFIXES
+from .start import help_cmd
+from modules.constants import PREFIXES
 
 
 def register(app: Client) -> None:

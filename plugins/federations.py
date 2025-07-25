@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.markdown import escape_markdown
@@ -101,10 +102,10 @@ async def enforce_fedban(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(create_fed, filters.command('createfed') & filters.group), group=0)
-    app.add_handler(MessageHandler(join_fed, filters.command('joinfed') & filters.group), group=0)
-    app.add_handler(MessageHandler(leave_fed, filters.command('leavefed') & filters.group), group=0)
-    app.add_handler(MessageHandler(list_feds, filters.command('federations')), group=0)
-    app.add_handler(MessageHandler(fed_ban, filters.command('fedban') & filters.group), group=0)
-    app.add_handler(MessageHandler(fed_unban, filters.command('fedunban') & filters.group), group=0)
+    app.add_handler(MessageHandler(create_fed, filters.command('createfed', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(join_fed, filters.command('joinfed', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(leave_fed, filters.command('leavefed', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(list_feds, filters.command('federations', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(fed_ban, filters.command('fedban', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(fed_unban, filters.command('fedunban', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(enforce_fedban, filters.new_chat_members), group=0)

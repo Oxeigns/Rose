@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
@@ -75,11 +76,11 @@ async def rules_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(rules_cmd, filters.command('rules') & (filters.group | filters.private)), group=0)
-    app.add_handler(MessageHandler(setrules_cmd, filters.command('setrules') & filters.group), group=0)
-    app.add_handler(MessageHandler(private_rules_cmd, filters.command('privaterules') & filters.group), group=0)
-    app.add_handler(MessageHandler(reset_rules_cmd, filters.command('resetrules') & filters.group), group=0)
-    app.add_handler(MessageHandler(set_rules_button, filters.command('setrulesbutton') & filters.group), group=0)
-    app.add_handler(MessageHandler(reset_rules_button, filters.command('resetrulesbutton') & filters.group), group=0)
+    app.add_handler(MessageHandler(rules_cmd, filters.command('rules', prefixes=PREFIXES) & (filters.group | filters.private)), group=0)
+    app.add_handler(MessageHandler(setrules_cmd, filters.command('setrules', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(private_rules_cmd, filters.command('privaterules', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(reset_rules_cmd, filters.command('resetrules', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(set_rules_button, filters.command('setrulesbutton', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(reset_rules_button, filters.command('resetrulesbutton', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(CallbackQueryHandler(rules_back, filters.regex('^rules:back')), group=0)
     app.add_handler(CallbackQueryHandler(rules_cb, filters.regex('^rules:(?!open$).+')), group=0)

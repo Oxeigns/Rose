@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 import time
@@ -17,5 +18,5 @@ async def echo(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(ping, filters.command('ping')), group=0)
-    app.add_handler(MessageHandler(echo, filters.command('echo')), group=0)
+    app.add_handler(MessageHandler(ping, filters.command('ping', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(echo, filters.command('echo', prefixes=PREFIXES)), group=0)

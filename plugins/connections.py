@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -37,6 +38,6 @@ def get_user_connection(user_id: int) -> int | None:
 
 
 def register(app):
-    app.add_handler(MessageHandler(connect_group, filters.command('connect') & filters.group), group=0)
-    app.add_handler(MessageHandler(disconnect_group, filters.command('disconnect') & filters.group), group=0)
-    app.add_handler(MessageHandler(show_connection, filters.command('connections') & filters.private), group=0)
+    app.add_handler(MessageHandler(connect_group, filters.command('connect', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(disconnect_group, filters.command('disconnect', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(show_connection, filters.command('connections', prefixes=PREFIXES) & filters.private), group=0)

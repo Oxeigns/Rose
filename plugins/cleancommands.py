@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -45,6 +46,6 @@ async def auto_clean(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(set_clean, filters.command('cleancommand') & filters.group), group=0)
-    app.add_handler(MessageHandler(keep_command, filters.command('keepcommand') & filters.group), group=0)
+    app.add_handler(MessageHandler(set_clean, filters.command('cleancommand', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(keep_command, filters.command('keepcommand', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(auto_clean, filters.regex('^/') & (filters.group | filters.private)), group=-1)

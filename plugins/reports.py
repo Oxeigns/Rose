@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.db import get_admins
@@ -7,7 +8,7 @@ REPORT_TAGS = {"@admin", "/report"}
 
 # Filter to catch reports either via @admin mention or /report command
 report_filter = filters.group & filters.reply & filters.text & (
-    filters.regex(r"(?i)^@admin$") | filters.command("report")
+    filters.regex(r"(?i)^@admin$") | filters.command("report", prefixes=PREFIXES)
 )
 
 async def handle_report(client: Client, message: Message):
