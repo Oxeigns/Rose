@@ -19,6 +19,8 @@ services:
         value: YOUR_API_HASH
       - key: BOT_TOKEN
         value: YOUR_BOT_TOKEN
+      - key: USE_WEBHOOK
+        value: "false"
 
   # Optional: run as a web service with a health check instead of a worker.
   # Uncomment below to deploy a minimal web server that keeps the service alive.

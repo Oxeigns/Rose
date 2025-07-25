@@ -11,7 +11,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from pyrogram import Client, idle, filters
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.handlers import (
+    MessageHandler,
+    CallbackQueryHandler,
+    RawUpdateHandler,
+)
 
 from plugins import register_all
 
@@ -100,8 +104,13 @@ async def _debug_query(client: Client, query):
     )
 
 
+async def _debug_raw(client: Client, update, users, chats):
+    LOGGER.debug("[RAW] %s", update)
+
+
 app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
 app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
+app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 
 
 # -------------------------------------------------------------
@@ -166,12 +175,6 @@ async def main() -> None:
     await init_db()
     LOGGER.info("✅ Database ready")
 
-    try:
-        await app.start()
-    except Exception as e:
-        LOGGER.exception("❌ Failed to start bot: %s", e)
-        return
-
     handler_count = sum(len(g) for g in app.dispatcher.groups.values())
     LOGGER.info(
         "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
@@ -180,14 +183,13 @@ async def main() -> None:
         len(app.dispatcher.groups),
     )
 
-    LOGGER.info("✅ Rose bot is running. Awaiting events...")
-
-    try:
+    async with app:
+        LOGGER.info(
+            "🤖 Bot started in %s mode", "Webhook" if USE_WEBHOOK else "Polling"
+        )
         await idle()
-    finally:
-        LOGGER.info("🛑 Stopping bot...")
-        await app.stop()
-        LOGGER.info("✅ Bot stopped cleanly.")
+
+    LOGGER.info("✅ Bot stopped cleanly.")
 
 
 # -------------------------------------------------------------
