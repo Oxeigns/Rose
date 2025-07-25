@@ -7,6 +7,7 @@ from pyrogram.types import (
 )
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from .help import HELP_MODULES
+from utils.errors import catch_errors
 from modules.buttons import (
     admin_panel,
     approvals_panel,
@@ -67,6 +68,7 @@ def help_menu() -> InlineKeyboardMarkup:
     keys.append([InlineKeyboardButton('❌ Close', callback_data='help:close')])
     return InlineKeyboardMarkup(keys)
 
+@catch_errors
 async def start_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /start received')
     text = '**Thanks for adding me!**\nUse /menu to configure moderation.' if message.chat.type in ['group', 'supergroup'] else '**🌹 Rose Bot**\nI help moderate and protect your group.'
@@ -79,12 +81,14 @@ async def start_cmd(client: Client, message: Message):
         parse_mode="markdown",
     )
 
+@catch_errors
 async def menu_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /menu received')
     await message.reply_text(
         '**📋 Control Panel**', reply_markup=build_menu(), quote=True, parse_mode="markdown"
     )
 
+@catch_errors
 async def help_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /help received')
     if len(message.command) > 1:
@@ -96,6 +100,7 @@ async def help_cmd(client: Client, message: Message):
         return
     await message.reply_text('**🛠 Help Panel**\nClick a button below to view module commands:', reply_markup=help_menu(), parse_mode='markdown')
 
+@catch_errors
 async def test_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /test received')
     await message.reply_text('✅ Test command received!')
