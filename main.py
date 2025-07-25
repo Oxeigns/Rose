@@ -44,6 +44,17 @@ logging.getLogger().addHandler(error_handler)
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.DEBUG)
 
+# Log uncaught asyncio exceptions
+def _loop_exception_handler(loop, context) -> None:
+    msg = context.get("message")
+    exc = context.get("exception")
+    if exc:
+        LOGGER.exception("Unhandled exception: %s", exc)
+    elif msg:
+        LOGGER.error("Unhandled exception: %s", msg)
+
+asyncio.get_event_loop().set_exception_handler(_loop_exception_handler)
+
 # -------------------------------------------------------------
 # Load environment variables
 # -------------------------------------------------------------
@@ -145,9 +156,9 @@ app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 
 
-@app.on_message()
-async def debug_print(client: Client, message) -> None:
-    """Log every incoming message for debugging."""
+@app.on_message(filters.all)
+async def log_message(client: Client, message) -> None:
+    """Log every incoming message."""
     LOGGER.info(
         "[LOG] %s (%s) in %s (%s): %s",
         message.from_user.first_name if message.from_user else "N/A",

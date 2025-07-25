@@ -21,15 +21,18 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
     The bot will exit with an error message if any required credential is missing.
     All logs are output at the DEBUG level for easy diagnostics.
 
-Set `DEPLOY_MODE=worker` to run the bot with long polling. For webhook mode
-(`DEPLOY_MODE=webhook`), also set `WEBHOOK_URL` and `PORT` so the FastAPI
-server can listen on `0.0.0.0:10000` and Telegram can reach your endpoint.
+Set `DEPLOY_MODE=worker` to run the bot with long polling. When deploying as a
+web service you can use `DEPLOY_MODE=webhook` together with `WEBHOOK_URL` and
+`PORT` so the FastAPI server listens on `0.0.0.0:$PORT` and Telegram can reach
+your endpoint.
 
 ## Deployment
 Example files are provided for running on container platforms:
 - `Dockerfile` for Docker based deployments
 - `Procfile` for Heroku style platforms
-- `render.yaml` includes both worker and webhook services for Render
+- `render.yaml` for a combined worker/webhook setup on Render
+- `render-worker.yaml` and `render-webhook.yaml` demonstrate separate services
+  for long polling and webhook modes on Render
 
 ---
 Licensed under the MIT License.
