@@ -1,5 +1,6 @@
 import json
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message, Document
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -36,6 +37,6 @@ async def importexport_help(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(export_data, filters.command('export') & filters.group), group=0)
-    app.add_handler(MessageHandler(import_data, filters.command('import') & filters.group), group=0)
-    app.add_handler(MessageHandler(importexport_help, filters.command('importexport') & filters.group), group=0)
+    app.add_handler(MessageHandler(export_data, filters.command('export', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(import_data, filters.command('import', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(importexport_help, filters.command('importexport', prefixes=PREFIXES) & filters.group), group=0)

@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -49,6 +50,6 @@ async def flood_checker(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(set_flood_limit, filters.command('setflood') & filters.group), group=0)
-    app.add_handler(MessageHandler(get_flood_limit, filters.command('flood') & filters.group), group=0)
+    app.add_handler(MessageHandler(set_flood_limit, filters.command('setflood', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(get_flood_limit, filters.command('flood', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(flood_checker, filters.text & filters.group & ~filters.service), group=0)

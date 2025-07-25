@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from utils.decorators import admin_required
@@ -103,11 +104,11 @@ async def notes_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(save_note, filters.command('save') & filters.group), group=0)
-    app.add_handler(MessageHandler(clear_note, filters.command('clear') & filters.group), group=0)
-    app.add_handler(MessageHandler(list_notes, filters.command(['notes', 'saved']) & filters.group), group=0)
-    app.add_handler(MessageHandler(clear_all_notes, filters.command('clearall') & filters.group), group=0)
-    app.add_handler(MessageHandler(private_notes_toggle, filters.command('privatenotes') & filters.group), group=0)
-    app.add_handler(MessageHandler(get_note_cmd, filters.command('get') & filters.group), group=0)
+    app.add_handler(MessageHandler(save_note, filters.command('save', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(clear_note, filters.command('clear', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(list_notes, filters.command(['notes', 'saved'], prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(clear_all_notes, filters.command('clearall', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(private_notes_toggle, filters.command('privatenotes', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(get_note_cmd, filters.command('get', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(get_note_hash, filters.text & filters.group), group=0)
     app.add_handler(CallbackQueryHandler(notes_cb, filters.regex('^notes:(?!open$)')), group=0)

@@ -1,5 +1,6 @@
 import random
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 RUN_STRINGS = ['Eeny meeny miny moe...', 'Time to run away!', "Let's hide!", 'Runs to the hills!', '🦶 Dashing off!']
@@ -36,9 +37,9 @@ async def limits(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(runs, filters.command('runs')), group=0)
-    app.add_handler(MessageHandler(get_id, filters.command('id')), group=0)
-    app.add_handler(MessageHandler(info, filters.command('info')), group=0)
-    app.add_handler(MessageHandler(donate, filters.command('donate')), group=0)
-    app.add_handler(MessageHandler(markdown_help, filters.command('markdownhelp')), group=0)
-    app.add_handler(MessageHandler(limits, filters.command('limits')), group=0)
+    app.add_handler(MessageHandler(runs, filters.command('runs', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(get_id, filters.command('id', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(info, filters.command('info', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(donate, filters.command('donate', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(markdown_help, filters.command('markdownhelp', prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(limits, filters.command('limits', prefixes=PREFIXES)), group=0)

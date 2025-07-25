@@ -17,8 +17,7 @@ from modules.buttons import (
     warnings_panel,
 )
 import logging
-
-PREFIXES = ["/", "!", "."]
+from modules.constants import PREFIXES
 
 LOGGER = logging.getLogger(__name__)
 

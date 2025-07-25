@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -54,8 +55,8 @@ def format_greeting(template: str, user, chat_title: str) -> str:
 
 
 def register(app):
-    app.add_handler(MessageHandler(set_welcome, filters.command('setwelcome') & filters.group), group=0)
-    app.add_handler(MessageHandler(set_goodbye, filters.command('setgoodbye') & filters.group), group=0)
-    app.add_handler(MessageHandler(show_greetings, filters.command('greetings') & filters.group), group=0)
+    app.add_handler(MessageHandler(set_welcome, filters.command('setwelcome', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(set_goodbye, filters.command('setgoodbye', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(show_greetings, filters.command('greetings', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(greet_new_members, filters.new_chat_members), group=0)
     app.add_handler(MessageHandler(farewell_user, filters.left_chat_member), group=0)

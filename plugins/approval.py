@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message, CallbackQuery
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from modules.buttons.approvals import approvals_panel
@@ -71,9 +72,9 @@ async def approvals_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(approve_user, filters.command('approve') & filters.group), group=0)
-    app.add_handler(MessageHandler(unapprove_user, filters.command('unapprove') & filters.group), group=0)
-    app.add_handler(MessageHandler(list_approved, filters.command('approved') & filters.group), group=0)
-    app.add_handler(MessageHandler(clear_approved, filters.command('clearapproved') & filters.group), group=0)
-    app.add_handler(MessageHandler(approval_mode_cmd, filters.command('approvalmode') & filters.group), group=0)
+    app.add_handler(MessageHandler(approve_user, filters.command('approve', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(unapprove_user, filters.command('unapprove', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(list_approved, filters.command('approved', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(clear_approved, filters.command('clearapproved', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(approval_mode_cmd, filters.command('approvalmode', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(CallbackQueryHandler(approvals_cb, filters.regex('^approvals:(?!open$).+')), group=0)

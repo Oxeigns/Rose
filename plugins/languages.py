@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -24,5 +25,5 @@ async def set_language(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(show_languages, filters.command('languages') & filters.group), group=0)
-    app.add_handler(MessageHandler(set_language, filters.command('setlang') & filters.group), group=0)
+    app.add_handler(MessageHandler(show_languages, filters.command('languages', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(set_language, filters.command('setlang', prefixes=PREFIXES) & filters.group), group=0)

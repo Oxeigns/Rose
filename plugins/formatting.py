@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.handlers import MessageHandler
 
@@ -9,4 +10,4 @@ async def formatting_help(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(formatting_help, filters.command('formatting')), group=0)
+    app.add_handler(MessageHandler(formatting_help, filters.command('formatting', prefixes=PREFIXES)), group=0)

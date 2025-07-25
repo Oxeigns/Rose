@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.errors import catch_errors
@@ -17,6 +18,7 @@ async def echo_all(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(ping_pong, filters.command("ping")), group=0)
-    app.add_handler(MessageHandler(start_message, filters.command("start")), group=0)
-    app.add_handler(MessageHandler(echo_all, filters.text & ~filters.command(["ping", "start"])), group=0)
+    app.add_handler(MessageHandler(ping_pong, filters.command("ping", prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(start_message, filters.command("start", prefixes=PREFIXES)), group=0)
+    app.add_handler(MessageHandler(echo_all, filters.text & ~filters.command(["ping", "start"], prefixes=PREFIXES)), group=0)
+

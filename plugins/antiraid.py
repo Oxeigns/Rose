@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -47,6 +48,6 @@ async def restrict_new_user(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(toggle_antiraid, filters.command('antiraid') & filters.group), group=0)
+    app.add_handler(MessageHandler(toggle_antiraid, filters.command('antiraid', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(new_member_joined, filters.new_chat_members), group=0)
     app.add_handler(MessageHandler(restrict_new_user, filters.group & filters.text & ~filters.service), group=0)

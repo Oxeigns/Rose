@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message, CallbackQuery
 from utils.markdown import escape_markdown
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -66,9 +67,9 @@ async def filters_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(add_filter_cmd, filters.command('filter') & filters.group), group=0)
-    app.add_handler(MessageHandler(stop_filter_cmd, filters.command('stop') & filters.group), group=0)
-    app.add_handler(MessageHandler(list_filters_cmd, filters.command('filters') & filters.group), group=0)
-    app.add_handler(MessageHandler(stopall_cmd, filters.command('stopall') & filters.group), group=0)
+    app.add_handler(MessageHandler(add_filter_cmd, filters.command('filter', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(stop_filter_cmd, filters.command('stop', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(list_filters_cmd, filters.command('filters', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(stopall_cmd, filters.command('stopall', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(filter_worker, filters.text & filters.group), group=1)
     app.add_handler(CallbackQueryHandler(filters_cb, filters.regex('^filters:(?!open$).+')), group=0)

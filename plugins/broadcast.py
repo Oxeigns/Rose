@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -64,4 +65,4 @@ async def broadcast_cmd(client: Client, message: Message) -> None:
 
 
 def register(app):
-    app.add_handler(MessageHandler(broadcast_cmd, filters.command('broadcast') & filters.user(OWNER_ID)), group=0)
+    app.add_handler(MessageHandler(broadcast_cmd, filters.command('broadcast', prefixes=PREFIXES) & filters.user(OWNER_ID)), group=0)

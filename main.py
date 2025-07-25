@@ -147,8 +147,15 @@ app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 
 @app.on_message()
 async def debug_print(client: Client, message) -> None:
-    """Print every incoming message for quick debugging."""
-    print("DEBUG:", message.text or message.caption or "<non-text message>")
+    """Log every incoming message for debugging."""
+    LOGGER.info(
+        "[LOG] %s (%s) in %s (%s): %s",
+        message.from_user.first_name if message.from_user else "N/A",
+        message.from_user.id if message.from_user else "N/A",
+        message.chat.title if message.chat else "PM",
+        message.chat.id if message.chat else "N/A",
+        (message.text or message.caption or "").replace("\n", " "),
+    )
 
 
 # -------------------------------------------------------------

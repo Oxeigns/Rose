@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -58,8 +59,8 @@ async def auto_delete_blocked(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(add_blocked_word, filters.command('addblock') & filters.group), group=0)
-    app.add_handler(MessageHandler(remove_blocked_word, filters.command('unblock') & filters.group), group=0)
-    app.add_handler(MessageHandler(show_blocklist, filters.command('blocklist') & filters.group), group=0)
-    app.add_handler(MessageHandler(clear_blocklist, filters.command('clearblocklist') & filters.group), group=0)
+    app.add_handler(MessageHandler(add_blocked_word, filters.command('addblock', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(remove_blocked_word, filters.command('unblock', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(show_blocklist, filters.command('blocklist', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(clear_blocklist, filters.command('clearblocklist', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(auto_delete_blocked, filters.text & filters.group & ~filters.service), group=0)

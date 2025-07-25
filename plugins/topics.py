@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
@@ -76,10 +77,10 @@ async def delete_topic(client, message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(action_topic, filters.command('actiontopic') & filters.group), group=0)
-    app.add_handler(MessageHandler(set_action_topic, filters.command('setactiontopic') & filters.group), group=0)
-    app.add_handler(MessageHandler(new_topic, filters.command('newtopic') & filters.group), group=0)
-    app.add_handler(MessageHandler(rename_topic, filters.command('renametopic') & filters.group), group=0)
-    app.add_handler(MessageHandler(close_topic, filters.command('closetopic') & filters.group), group=0)
-    app.add_handler(MessageHandler(reopen_topic, filters.command('reopentopic') & filters.group), group=0)
-    app.add_handler(MessageHandler(delete_topic, filters.command('deletetopic') & filters.group), group=0)
+    app.add_handler(MessageHandler(action_topic, filters.command('actiontopic', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(set_action_topic, filters.command('setactiontopic', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(new_topic, filters.command('newtopic', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(rename_topic, filters.command('renametopic', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(close_topic, filters.command('closetopic', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(reopen_topic, filters.command('reopentopic', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(delete_topic, filters.command('deletetopic', prefixes=PREFIXES) & filters.group), group=0)

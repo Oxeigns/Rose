@@ -1,4 +1,5 @@
 from pyrogram import Client, filters, StopPropagation
+from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.db import get_chat_setting, set_chat_setting
@@ -48,7 +49,8 @@ async def block_disabled(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(disable_command, filters.command('disable') & filters.group), group=0)
-    app.add_handler(MessageHandler(enable_command, filters.command('enable') & filters.group), group=0)
-    app.add_handler(MessageHandler(list_disabled, filters.command('disabled') & filters.group), group=0)
-    app.add_handler(MessageHandler(block_disabled, filters.command('') & filters.group), group=-99)
+    app.add_handler(MessageHandler(disable_command, filters.command('disable', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(enable_command, filters.command('enable', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(list_disabled, filters.command('disabled', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(block_disabled, filters.command('', prefixes=PREFIXES) & filters.group), group=-99)
+

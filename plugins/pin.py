@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
@@ -79,10 +80,10 @@ async def cleanlinked_cmd(client: Client, message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(pinned_cmd, filters.command('pinned') & filters.group), group=0)
-    app.add_handler(MessageHandler(pin_cmd, filters.command('pin') & filters.group), group=0)
-    app.add_handler(MessageHandler(permapin_cmd, filters.command('permapin') & filters.group), group=0)
-    app.add_handler(MessageHandler(unpin_cmd, filters.command('unpin') & filters.group), group=0)
-    app.add_handler(MessageHandler(unpin_all_cmd, filters.command('unpinall') & filters.group), group=0)
-    app.add_handler(MessageHandler(antichannelpin_cmd, filters.command('antichannelpin') & filters.group), group=0)
-    app.add_handler(MessageHandler(cleanlinked_cmd, filters.command('cleanlinked') & filters.group), group=0)
+    app.add_handler(MessageHandler(pinned_cmd, filters.command('pinned', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(pin_cmd, filters.command('pin', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(permapin_cmd, filters.command('permapin', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(unpin_cmd, filters.command('unpin', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(unpin_all_cmd, filters.command('unpinall', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(antichannelpin_cmd, filters.command('antichannelpin', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(cleanlinked_cmd, filters.command('cleanlinked', prefixes=PREFIXES) & filters.group), group=0)

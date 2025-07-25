@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
 purge_points = {}
@@ -62,8 +63,8 @@ async def purge_to_cmd(client: Client, message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(purge_cmd, filters.command('purge') & filters.group), group=0)
-    app.add_handler(MessageHandler(spurge_cmd, filters.command('spurge') & filters.group), group=0)
-    app.add_handler(MessageHandler(del_cmd, filters.command('del') & filters.group), group=0)
-    app.add_handler(MessageHandler(purge_from_cmd, filters.command('purgefrom') & filters.group), group=0)
-    app.add_handler(MessageHandler(purge_to_cmd, filters.command('purgeto') & filters.group), group=0)
+    app.add_handler(MessageHandler(purge_cmd, filters.command('purge', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(spurge_cmd, filters.command('spurge', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(del_cmd, filters.command('del', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(purge_from_cmd, filters.command('purgefrom', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(purge_to_cmd, filters.command('purgeto', prefixes=PREFIXES) & filters.group), group=0)

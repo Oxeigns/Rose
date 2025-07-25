@@ -1,4 +1,5 @@
 from pyrogram import Client, filters, types
+from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
 from pyrogram.types import CallbackQuery
@@ -63,6 +64,6 @@ async def lock_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(lock_cmd, filters.command('lock') & filters.group), group=0)
-    app.add_handler(MessageHandler(unlock_cmd, filters.command('unlock') & filters.group), group=0)
+    app.add_handler(MessageHandler(lock_cmd, filters.command('lock', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(unlock_cmd, filters.command('unlock', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(CallbackQueryHandler(lock_cb, filters.regex('^lock:(?!open$).+')), group=0)

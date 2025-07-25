@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from modules.constants import PREFIXES
 from pyrogram.types import Message, CallbackQuery
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import is_admin
@@ -89,11 +90,11 @@ async def admin_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(promote, filters.command('promote') & filters.group), group=0)
-    app.add_handler(MessageHandler(demote, filters.command('demote') & filters.group), group=0)
-    app.add_handler(MessageHandler(adminlist, filters.command('adminlist') & filters.group), group=0)
-    app.add_handler(MessageHandler(admincache, filters.command('admincache') & filters.group), group=0)
-    app.add_handler(MessageHandler(anonadmin, filters.command('anonadmin') & filters.group), group=0)
-    app.add_handler(MessageHandler(adminerror, filters.command('adminerror') & filters.group), group=0)
-    app.add_handler(MessageHandler(admin_menu, filters.command('admin') & filters.group), group=0)
+    app.add_handler(MessageHandler(promote, filters.command('promote', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(demote, filters.command('demote', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(adminlist, filters.command('adminlist', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(admincache, filters.command('admincache', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(anonadmin, filters.command('anonadmin', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(adminerror, filters.command('adminerror', prefixes=PREFIXES) & filters.group), group=0)
+    app.add_handler(MessageHandler(admin_menu, filters.command('admin', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(CallbackQueryHandler(admin_cb, filters.regex('^admin:(?!open$).+')), group=0)
