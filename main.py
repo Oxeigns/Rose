@@ -9,7 +9,8 @@ import urllib.request
 from pathlib import Path
 
 from dotenv import load_dotenv
-from pyrogram import Client, idle
+from pyrogram import Client, idle, filters
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from plugins import register_all
 
@@ -36,7 +37,7 @@ error_handler.setLevel(logging.ERROR)
 logging.getLogger().addHandler(error_handler)
 
 LOGGER = logging.getLogger(__name__)
-logging.getLogger("pyrogram").setLevel(logging.INFO)
+logging.getLogger("pyrogram").setLevel(logging.DEBUG)
 
 # -------------------------------------------------------------
 # Load environment variables
@@ -46,6 +47,14 @@ load_dotenv()
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
+
+if USE_WEBHOOK:
+    LOGGER.warning(
+        "USE_WEBHOOK is enabled but Pyrogram only supports long polling. "
+        "The bot will continue using polling."
+    )
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
     LOGGER.error("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.")
@@ -66,11 +75,41 @@ app = Client(
 
 
 # -------------------------------------------------------------
+# Debug handlers to trace all incoming updates
+# -------------------------------------------------------------
+async def _debug_message(client: Client, message):
+    LOGGER.debug(
+        "[MSG] %s (%s) in %s (%s): %s",
+        message.from_user.first_name if message.from_user else "N/A",
+        message.from_user.id if message.from_user else "N/A",
+        message.chat.title if message.chat else "PM",
+        message.chat.id if message.chat else "N/A",
+        (message.text or message.caption or "").replace("\n", " "),
+    )
+
+
+async def _debug_query(client: Client, query):
+    LOGGER.debug(
+        "[CB] %s (%s) in %s (%s): %s",
+        query.from_user.first_name if query.from_user else "N/A",
+        query.from_user.id if query.from_user else "N/A",
+        query.message.chat.title if query.message else "PM",
+        query.message.chat.id if query.message else "N/A",
+        query.data,
+    )
+
+
+app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
+app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
+
+
+# -------------------------------------------------------------
 # Delete webhook to enable polling
 # -------------------------------------------------------------
 def _delete_webhook() -> None:
     """Remove any webhook (if set) to enable polling mode."""
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
+    LOGGER.debug("🌐 Deleting existing webhook (if any)...")
     try:
         with urllib.request.urlopen(url) as response:
             data = json.load(response)
@@ -88,9 +127,17 @@ def _delete_webhook() -> None:
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
 
-    register_all(app)
+    try:
+        plugin_count = register_all(app)
+    except Exception as e:
+        LOGGER.exception("❌ Failed loading plugins: %s", e)
+        return
 
     await asyncio.to_thread(_delete_webhook)
+
+    LOGGER.debug("📚 Initializing database...")
+    await init_db()
+    LOGGER.info("✅ Database ready")
 
     try:
         await app.start()
@@ -100,12 +147,12 @@ async def main() -> None:
 
     handler_count = sum(len(g) for g in app.dispatcher.groups.values())
     LOGGER.info(
-        "🔌 Loaded %s handler(s) across %s group(s)",
+        "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
+        plugin_count,
         handler_count,
         len(app.dispatcher.groups),
     )
 
-    await init_db()
     LOGGER.info("✅ Rose bot is running. Awaiting events...")
 
     try:

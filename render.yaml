@@ -1,4 +1,5 @@
 services:
+  # Background worker running long-polling
   - type: worker
     name: rose-bot
     env: python
@@ -16,5 +17,14 @@ services:
         value: YOUR_API_ID
       - key: API_HASH
         value: YOUR_API_HASH
-      - key: BOT_TOKEN
+  - key: BOT_TOKEN
         value: YOUR_BOT_TOKEN
+
+  # Optional: run as a web service with a health check instead of a worker.
+  # Uncomment below to deploy a minimal web server that keeps the service alive.
+  # - type: web
+  #   name: rose-bot-web
+  #   env: python
+  #   plan: free
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python web.py
