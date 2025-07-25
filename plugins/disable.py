@@ -4,6 +4,22 @@ from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.db import get_chat_setting, set_chat_setting
 from utils.decorators import admin_required
+from pyrogram.filters import create
+import re
+
+_CMD_PATTERN = re.compile(rf"^[{re.escape(''.join(PREFIXES))}]")
+
+def any_command():
+    async def func(_, __, message: Message):
+        text = message.text or message.caption or ""
+        if not _CMD_PATTERN.match(text):
+            return False
+        for p in PREFIXES:
+            if text.startswith(p):
+                message.command = text[len(p):].split()
+                break
+        return True
+    return create(func, "AnyCommand")
 DISABLED_CMDS = {}
 
 @admin_required
@@ -39,7 +55,7 @@ async def list_disabled(client: Client, message: Message):
 
 async def block_disabled(client: Client, message: Message):
     chat_id = message.chat.id
-    cmd = message.command[0].lower().lstrip('/')
+    cmd = message.command[0].lower().lstrip('/') if message.command else ''
     if cmd in DISABLED_CMDS.get(chat_id, set()):
         try:
             await message.delete()
@@ -52,5 +68,5 @@ def register(app):
     app.add_handler(MessageHandler(disable_command, filters.command('disable', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(enable_command, filters.command('enable', prefixes=PREFIXES) & filters.group), group=0)
     app.add_handler(MessageHandler(list_disabled, filters.command('disabled', prefixes=PREFIXES) & filters.group), group=0)
-    app.add_handler(MessageHandler(block_disabled, filters.command('', prefixes=PREFIXES) & filters.group), group=-99)
+    app.add_handler(MessageHandler(block_disabled, any_command() & filters.group), group=-99)
 
