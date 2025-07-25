@@ -71,12 +71,42 @@ API_ID = int(API_ID)
 # Bot Client with plugin support
 # -------------------------------------------------------------
 # IMPORTANT: Handlers are registered manually via the plugins package.
-app = Client(
+
+COMMAND_PREFIXES = ["/", "!", "."]
+
+class RoseClient(Client):
+    """Client subclass that logs handler registration and errors."""
+
+    def add_handler(self, handler, group=0):
+        name = getattr(handler.callback, "__name__", str(handler.callback))
+        LOGGER.info("🔗 Registering handler %s (group=%s)", name, group)
+
+        async def wrapped(client, *args, **kwargs):
+            try:
+                await handler.callback(client, *args, **kwargs)
+            except Exception as e:  # pragma: no cover - runtime logging
+                LOGGER.exception("❌ Error in handler %s: %s", name, e)
+                raise
+
+        handler.callback = wrapped
+        return super().add_handler(handler, group)
+
+
+app = RoseClient(
     "rose_bot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
 )
+
+# Patch filters.command globally for common prefixes
+_orig_command = filters.command
+
+def _command_patch(commands, prefixes=None, *args, **kwargs):
+    prefixes = prefixes or COMMAND_PREFIXES
+    return _orig_command(commands, prefixes=prefixes, *args, **kwargs)
+
+filters.command = _command_patch
 
 
 # -------------------------------------------------------------
@@ -163,6 +193,10 @@ async def main() -> None:
     except Exception as e:
         LOGGER.exception("❌ Failed loading plugins: %s", e)
         return
+
+    @app.on_message()
+    async def debug_all(client, message):  # pragma: no cover - debug handler
+        print("DEBUG:", message.text)
 
     if USE_WEBHOOK:
         LOGGER.info("🌐 Setting webhook...")
