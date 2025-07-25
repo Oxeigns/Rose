@@ -26,6 +26,10 @@ web service you can use `DEPLOY_MODE=webhook` together with `WEBHOOK_URL` and
 `PORT` so the FastAPI server listens on `0.0.0.0:$PORT` and Telegram can reach
 your endpoint.
 
+When deploying to **Render**, make sure the service is a **worker** so the bot
+polls Telegram for updates. The provided `render-worker.yaml` blueprint sets the
+correct command and environment variables out of the box.
+
 ## Deployment
 Example files are provided for running on container platforms:
 - `Dockerfile` for Docker based deployments
