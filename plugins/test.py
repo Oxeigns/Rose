@@ -1,13 +1,17 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
+from utils.errors import catch_errors
 
+@catch_errors
 async def ping_pong(client: Client, message: Message):
     await message.reply_text("pong")
 
+@catch_errors
 async def start_message(client: Client, message: Message):
     await message.reply_text("Hello, I am alive!")
 
+@catch_errors
 async def echo_all(client: Client, message: Message):
     await message.reply_text(f"echo: {message.text}")
 
