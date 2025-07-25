@@ -209,15 +209,14 @@ async def main() -> None:
     await init_db()
     LOGGER.info("✅ Database ready")
 
-    handler_count = sum(len(g) for g in app.dispatcher.groups.values())
-    LOGGER.info(
-        "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
-        plugin_count,
-        handler_count,
-        len(app.dispatcher.groups),
-    )
-
     async with app:
+        handler_count = sum(len(g) for g in app.dispatcher.groups.values())
+        LOGGER.info(
+            "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
+            plugin_count,
+            handler_count,
+            len(app.dispatcher.groups),
+        )
         LOGGER.info(
             "🤖 Bot started in %s mode", "Webhook" if USE_WEBHOOK else "Polling"
         )
