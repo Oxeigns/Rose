@@ -17,7 +17,7 @@ services:
         value: YOUR_API_ID
       - key: API_HASH
         value: YOUR_API_HASH
-  - key: BOT_TOKEN
+      - key: BOT_TOKEN
         value: YOUR_BOT_TOKEN
 
   # Optional: run as a web service with a health check instead of a worker.

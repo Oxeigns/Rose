@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import urllib.request
+import urllib.parse
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -49,12 +50,12 @@ API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 USE_WEBHOOK = os.getenv("USE_WEBHOOK", "false").lower() == "true"
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 if USE_WEBHOOK:
-    LOGGER.warning(
-        "USE_WEBHOOK is enabled but Pyrogram only supports long polling. "
-        "The bot will continue using polling."
-    )
+    if not WEBHOOK_URL:
+        LOGGER.error("USE_WEBHOOK is true but WEBHOOK_URL is not set")
+        raise SystemExit(1)
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
     LOGGER.error("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.")
@@ -121,6 +122,27 @@ def _delete_webhook() -> None:
         LOGGER.warning("⚠️ Exception while deleting webhook: %s", e)
 
 
+def _set_webhook() -> None:
+    """Set webhook for Bot API mode."""
+    if not WEBHOOK_URL:
+        LOGGER.error("WEBHOOK_URL not provided")
+        return
+    url = (
+        f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook"
+        f"?url={urllib.parse.quote(WEBHOOK_URL)}"
+    )
+    LOGGER.debug("🌐 Setting webhook to %s", WEBHOOK_URL)
+    try:
+        with urllib.request.urlopen(url) as response:
+            data = json.load(response)
+        if not data.get("ok"):
+            LOGGER.warning("⚠️ Failed to set webhook: %s", data)
+        else:
+            LOGGER.info("✅ Webhook set successfully.")
+    except Exception as e:
+        LOGGER.warning("⚠️ Exception while setting webhook: %s", e)
+
+
 # -------------------------------------------------------------
 # Bot lifecycle
 # -------------------------------------------------------------
@@ -133,7 +155,12 @@ async def main() -> None:
         LOGGER.exception("❌ Failed loading plugins: %s", e)
         return
 
-    await asyncio.to_thread(_delete_webhook)
+    if USE_WEBHOOK:
+        LOGGER.info("🌐 Setting webhook...")
+        await asyncio.to_thread(_set_webhook)
+    else:
+        LOGGER.info("🌐 Deleting existing webhook (if any)...")
+        await asyncio.to_thread(_delete_webhook)
 
     LOGGER.debug("📚 Initializing database...")
     await init_db()
@@ -166,6 +193,18 @@ async def main() -> None:
 # -------------------------------------------------------------
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        if USE_WEBHOOK:
+            from web import app as web_app
+            import threading
+
+            threading.Thread(
+                target=lambda: web_app.run(
+                    host="0.0.0.0", port=int(os.getenv("PORT", 5000))
+                ),
+                daemon=True,
+            ).start()
+            asyncio.run(main())
+        else:
+            asyncio.run(main())
     except KeyboardInterrupt:
         LOGGER.info("🔌 Interrupted. Exiting...")
