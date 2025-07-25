@@ -24,7 +24,7 @@ This repository contains the source code for **Rose**, a modular Telegram bot bu
 ## Deployment
 Example files are provided for running on container platforms:
 - `Dockerfile` for Docker based deployments
-- `Procfile` and `render.yaml` for hosting services
+- `Procfile` and `render-worker.yaml`/`render-web.yaml` for hosting services
 
 ---
 Licensed under the MIT License.
