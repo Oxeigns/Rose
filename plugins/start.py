@@ -18,6 +18,8 @@ from modules.buttons import (
 )
 import logging
 
+PREFIXES = ["/", "!", "."]
+
 LOGGER = logging.getLogger(__name__)
 
 MODULE_BUTTONS = [
@@ -139,10 +141,22 @@ async def help_cb(client: Client, query: CallbackQuery):
 
 
 def register(app):
-    app.add_handler(MessageHandler(start_cmd, filters.command('start')), group=0)
-    app.add_handler(MessageHandler(menu_cmd, filters.command('menu')), group=0)
-    app.add_handler(MessageHandler(help_cmd, filters.command('help')), group=0)
-    app.add_handler(MessageHandler(test_cmd, filters.command('test')), group=0)
+    app.add_handler(
+        MessageHandler(start_cmd, filters.command("start", prefixes=PREFIXES)),
+        group=0,
+    )
+    app.add_handler(
+        MessageHandler(menu_cmd, filters.command("menu", prefixes=PREFIXES)),
+        group=0,
+    )
+    app.add_handler(
+        MessageHandler(help_cmd, filters.command("help", prefixes=PREFIXES)),
+        group=0,
+    )
+    app.add_handler(
+        MessageHandler(test_cmd, filters.command("test", prefixes=PREFIXES)),
+        group=0,
+    )
     app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex('^menu:open$')), group=0)
     app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex('^(?!menu)[a-z]+:open$')), group=0)
     app.add_handler(CallbackQueryHandler(menu_cb, filters.regex('^main:menu$')), group=0)

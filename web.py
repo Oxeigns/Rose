@@ -1,24 +1,30 @@
-"""Minimal Flask app used when running the bot as a web service."""
+"""FastAPI webhook app for handling Telegram updates."""
 
-from flask import Flask, request
 import logging
 import os
+from fastapi import FastAPI, Request
+import uvicorn
+from pyrogram import Client
 
 LOGGER = logging.getLogger(__name__)
 
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return 'Rose bot is running.'
+web_app = FastAPI()
+_bot: Client | None = None
 
 
-@app.post('/webhook')
-def webhook():
-    """Endpoint for Telegram webhooks. Only logs the payload for now."""
-    LOGGER.debug('Webhook payload: %s', request.json)
-    return 'ok'
+def setup(bot: Client) -> None:
+    """Initialize webhook routes for the given bot."""
+    global _bot
+    _bot = bot
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    @web_app.post("/")
+    async def telegram_webhook(request: Request):
+        data = await request.json()
+        await _bot.process_webhook_update(data)
+        return {"status": "ok"}
+
+
+def run() -> None:
+    """Run the FastAPI server."""
+    port = int(os.getenv("PORT", "10000"))
+    uvicorn.run(web_app, host="0.0.0.0", port=port)

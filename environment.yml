@@ -9,4 +9,5 @@ dependencies:
       - aiosqlite
       - motor
       - python-dotenv
-      - flask
+      - fastapi
+      - uvicorn
