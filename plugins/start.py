@@ -71,15 +71,34 @@ def help_menu() -> InlineKeyboardMarkup:
 @catch_errors
 async def start_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /start received')
-    text = '**Thanks for adding me!**\nUse /menu to configure moderation.' if message.chat.type in ['group', 'supergroup'] else '**🌹 Rose Bot**\nI help moderate and protect your group.'
-    await message.reply_text(
-        text,
-        reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
-        ),
-        quote=True,
-        parse_mode="markdown",
+    text = (
+        '**Thanks for adding me!**\nUse /menu to configure moderation.'
+        if message.chat.type in ['group', 'supergroup']
+        else '**🌹 Rose Bot**\nI help moderate and protect your group.'
     )
+
+    if message.chat.type == 'private':
+        await message.reply_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
+            ),
+            quote=True,
+            parse_mode="markdown",
+        )
+    else:
+        await message.reply("📩 I've sent you a PM with information.")
+        try:
+            await client.send_message(
+                message.from_user.id,
+                text,
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
+                ),
+                parse_mode="markdown",
+            )
+        except Exception:
+            await message.reply("❌ I can't message you. Please start me in PM first.")
 
 @catch_errors
 async def menu_cmd(client: Client, message: Message):
@@ -93,17 +112,39 @@ async def help_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /help received')
     if len(message.command) > 1:
         mod = message.command[1].lower()
-        if mod in HELP_MODULES:
-            await message.reply_text(HELP_MODULES[mod], reply_markup=help_menu(), parse_mode='markdown')
-        else:
-            await message.reply_text('❌ Unknown module.\nUse `/help` to see available modules.', parse_mode='markdown')
-        return
-    await message.reply_text('**🛠 Help Panel**\nClick a button below to view module commands:', reply_markup=help_menu(), parse_mode='markdown')
+        response = (
+            HELP_MODULES[mod]
+            if mod in HELP_MODULES
+            else '❌ Unknown module.\nUse `/help` to see available modules.'
+        )
+    else:
+        response = '**🛠 Help Panel**\nClick a button below to view module commands:'
+
+    if message.chat.type == 'private':
+        await message.reply_text(response, reply_markup=help_menu(), parse_mode='markdown')
+    else:
+        await message.reply("📩 I've sent you a PM with help information.")
+        try:
+            await client.send_message(
+                message.from_user.id,
+                response,
+                reply_markup=help_menu(),
+                parse_mode='markdown',
+            )
+        except Exception:
+            await message.reply("❌ I can't message you. Please start me in PM first.")
 
 @catch_errors
 async def test_cmd(client: Client, message: Message):
     LOGGER.debug('📩 /test received')
-    await message.reply_text('✅ Test command received!')
+    if message.chat.type == 'private':
+        await message.reply_text('✅ Test command received!')
+    else:
+        await message.reply("📩 Check your PM for the test result.")
+        try:
+            await client.send_message(message.from_user.id, '✅ Test command received!')
+        except Exception:
+            await message.reply("❌ I can't message you. Please start me in PM first.")
 
 async def menu_open_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 menu:open callback')
