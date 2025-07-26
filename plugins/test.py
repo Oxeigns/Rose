@@ -7,12 +7,26 @@ from utils.errors import catch_errors
 
 @catch_errors
 async def ping_pong(client: Client, message: Message):
-    await message.reply_text("pong")
+    if message.chat.type == 'private':
+        await message.reply_text("pong")
+    else:
+        await message.reply("📩 Pong sent in PM.")
+        try:
+            await client.send_message(message.from_user.id, "pong")
+        except Exception:
+            await message.reply("❌ I can't message you. Please start me in PM first.")
 
 
 @catch_errors
 async def start_message(client: Client, message: Message):
-    await message.reply_text("Hello, I am alive!")
+    if message.chat.type == 'private':
+        await message.reply_text("Hello, I am alive!")
+    else:
+        await message.reply("📩 I've messaged you privately.")
+        try:
+            await client.send_message(message.from_user.id, "Hello, I am alive!")
+        except Exception:
+            await message.reply("❌ I can't message you. Please start me in PM first.")
 
 
 @catch_errors

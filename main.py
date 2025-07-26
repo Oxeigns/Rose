@@ -127,6 +127,18 @@ async def _debug_query(client: Client, query):
     except Exception:
         pass
 
+async def _debug_message(client: Client, message):
+    """Lightweight debug logger for incoming messages."""
+    try:
+        if message.from_user and message.from_user.is_self:
+            return
+        user = message.from_user.id if message.from_user else "N/A"
+        chat = message.chat.id if message.chat else "PM"
+        text = message.text or message.caption or ""
+        print(f"[MSG] {user} in {chat}: {text.replace('\n', ' ')}")
+    except Exception:
+        pass
+
 async def _debug_raw(client: Client, update, users, chats):
     try:
         print(f"[RAW] {update}")
@@ -134,6 +146,7 @@ async def _debug_raw(client: Client, update, users, chats):
         pass
 app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
+app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
 
 # -------------------------------------------------------------
 # Safe log_all_messages
@@ -142,6 +155,10 @@ app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 async def log_all_messages(client: Client, message):
     """Safely log messages without deep object introspection."""
     try:
+        # Ignore messages sent by the bot itself to avoid noisy loops
+        if message.from_user and message.from_user.is_self:
+            return
+
         user = message.from_user.id if message.from_user else "unknown"
         text = message.text or message.caption or "<no text>"
         # Avoid using LOGGER here to prevent logging loops
