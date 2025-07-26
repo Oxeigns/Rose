@@ -82,6 +82,10 @@ class RoseClient(Client):
         name = getattr(handler.callback, "__name__", str(handler.callback))
         LOGGER.info("🔗 Registering handler %s (group=%s)", name, group)
 
+        # Skip wrapping for simple debug/log handlers to avoid recursion
+        if name in {"log_all_messages", "_debug_message", "_debug_query", "_debug_raw"}:
+            return super().add_handler(handler, group)
+
         async def wrapped(client, *args, **kwargs):
             try:
                 await handler.callback(client, *args, **kwargs)
@@ -154,7 +158,8 @@ async def log_all_messages(client: Client, message):
     try:
         user = message.from_user.id if message.from_user else "unknown"
         text = message.text or message.caption or "<no text>"
-        LOGGER.info("Message from %s: %s", user, text)
+        # Avoid using LOGGER here to prevent logging loops
+        print(f"Message from {user}: {text}")
     except Exception as e:
         print("Error in log_all_messages:", e, file=sys.stderr)
 
