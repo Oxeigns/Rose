@@ -135,7 +135,8 @@ async def _debug_message(client: Client, message):
         user = message.from_user.id if message.from_user else "N/A"
         chat = message.chat.id if message.chat else "PM"
         text = message.text or message.caption or ""
-        print(f"[MSG] {user} in {chat}: {text.replace('\n', ' ')}")
+        clean_text = text.replace("\n", " ")
+        print(f"[MSG] {user} in {chat}: {clean_text}")
     except Exception:
         pass
 
