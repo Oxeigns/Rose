@@ -1,5 +1,6 @@
 import aiosqlite
 import asyncio
+import logging
 
 DB_PATH = "bot.db"
 
@@ -48,8 +49,24 @@ CREATE_TABLES = [
 ]
 
 
-async def init_db():
-    async with aiosqlite.connect(DB_PATH) as db:
-        for query in CREATE_TABLES:
-            await db.execute(query)
-        await db.commit()
+logger = logging.getLogger(__name__)
+_db_lock = asyncio.Lock()
+_initialized = False
+
+
+async def init_db() -> None:
+    """Initialize the SQLite database once."""
+    global _initialized
+    async with _db_lock:
+        if _initialized:
+            return
+        try:
+            async with aiosqlite.connect(DB_PATH) as db:
+                for query in CREATE_TABLES:
+                    await db.execute(query)
+                await db.commit()
+            _initialized = True
+            logger.info("Database initialized")
+        except Exception as e:
+            logger.exception("Failed to initialize database: %s", e)
+            raise
