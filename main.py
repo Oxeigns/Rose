@@ -210,6 +210,7 @@ async def _set_webhook(client: Client) -> None:
 async def main() -> None:
     LOGGER.info("🚀 Starting Rose bot...")
 
+    # Register all plugin handlers before starting the client
     try:
         plugin_count = register_all(app)
     except Exception as e:
@@ -254,8 +255,8 @@ if __name__ == "__main__":
 
             setup(app)
             threading.Thread(target=run, daemon=True).start()
-            asyncio.run(main())
+            app.run(main())
         else:
-            asyncio.run(main())
+            app.run(main())
     except KeyboardInterrupt:
         LOGGER.info("🔌 Interrupted. Exiting...")
