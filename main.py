@@ -100,6 +100,9 @@ class RoseClient(Client):
         async def wrapped(client, *args, **kwargs):
             try:
                 await handler.callback(client, *args, **kwargs)
+            except RecursionError as e:  # pragma: no cover - avoid logging recursion
+                print(f"RecursionError in handler {name}: {e}", file=sys.stderr)
+                raise
             except Exception as e:  # pragma: no cover - runtime logging
                 LOGGER.exception("❌ Error in handler %s: %s", name, e)
                 raise
@@ -160,15 +163,12 @@ app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 
 
 @app.on_message(filters.all)
-async def log_message(client: Client, message) -> None:
-    """Log every incoming message."""
+async def log_all_messages(client: Client, message) -> None:
+    """Log every incoming message without dumping the entire object."""
     LOGGER.info(
-        "[LOG] %s (%s) in %s (%s): %s",
-        message.from_user.first_name if message.from_user else "N/A",
-        message.from_user.id if message.from_user else "N/A",
-        message.chat.title if message.chat else "PM",
-        message.chat.id if message.chat else "N/A",
-        (message.text or message.caption or "").replace("\n", " "),
+        "Message from %s: %s",
+        message.from_user.id if message.from_user else None,
+        (message.text or ""),
     )
 
 
