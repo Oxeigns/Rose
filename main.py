@@ -56,7 +56,7 @@ load_dotenv()
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-DEPLOY_MODE = os.getenv("DEPLOY_MODE", "worker").lower()
+DEPLOY_MODE = os.getenv("DEPLOY_MODE", "polling").lower()
 USE_WEBHOOK = DEPLOY_MODE == "webhook"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
@@ -172,50 +172,67 @@ async def _set_webhook(client: Client) -> None:
 # -------------------------------------------------------------
 # Main
 # -------------------------------------------------------------
-async def main():
-    LOGGER.info("🚀 Starting Rose bot...")
-
+async def _startup() -> None:
+    """Load plugins and initialize the database."""
     try:
         plugin_count = register_all(app)
     except Exception as e:
         LOGGER.exception("❌ Failed loading plugins: %s", e)
-        return
+        raise
 
+    LOGGER.debug("📚 Initializing database...")
+    await init_db()
+    LOGGER.info("✅ Database ready")
+
+    handler_count = sum(len(g) for g in app.dispatcher.groups.values())
+    LOGGER.info(
+        "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
+        plugin_count,
+        handler_count,
+        len(app.dispatcher.groups),
+    )
+
+
+async def _run_polling() -> None:
+    """Start the bot using long polling."""
+    LOGGER.info("🚀 Starting Rose bot in polling mode...")
     async with app:
-        if USE_WEBHOOK:
-            await _set_webhook(app)
-        else:
-            await _delete_webhook(app)
-
-        LOGGER.debug("📚 Initializing database...")
-        await init_db()
-        LOGGER.info("✅ Database ready")
-
-        handler_count = sum(len(g) for g in app.dispatcher.groups.values())
-        LOGGER.info(
-            "🔌 Loaded %s plugin(s) with %s handler(s) across %s group(s)",
-            plugin_count,
-            handler_count,
-            len(app.dispatcher.groups),
-        )
-        LOGGER.info(
-            "🤖 Bot started in %s mode", "Webhook" if USE_WEBHOOK else "Polling"
-        )
+        await _delete_webhook(app)
+        await _startup()
         LOGGER.info("✅ Bot is ready to receive updates")
-
         await idle()
+    LOGGER.info("✅ Bot stopped cleanly.")
 
+
+async def _run_webhook() -> None:
+    """Start the bot with a FastAPI webhook server."""
+    LOGGER.info("🚀 Starting Rose bot in webhook mode...")
+    from web import setup, web_app
+    import uvicorn
+
+    setup(app)
+    await app.start()
+    await _set_webhook(app)
+    await _startup()
+    LOGGER.info("✅ Bot is ready to receive updates")
+
+    port = int(os.getenv("PORT", "10000"))
+    config = uvicorn.Config(web_app, host="0.0.0.0", port=port, log_level="info")
+    server = uvicorn.Server(config)
+    server_task = asyncio.create_task(server.serve())
+    try:
+        await idle()
+    finally:
+        server.should_exit = True
+        await server_task
+        await app.stop()
     LOGGER.info("✅ Bot stopped cleanly.")
 
 if __name__ == "__main__":
     try:
         if USE_WEBHOOK:
-            from web import setup, run
-            import threading
-            setup(app)
-            threading.Thread(target=run, daemon=True).start()
-            app.run(main())
+            asyncio.run(_run_webhook())
         else:
-            app.run(main())
+            asyncio.run(_run_polling())
     except KeyboardInterrupt:
         LOGGER.info("🔌 Interrupted. Exiting...")
