@@ -65,7 +65,7 @@ if USE_WEBHOOK and not WEBHOOK_URL:
     raise SystemExit(1)
 
 if not all([API_ID, API_HASH, BOT_TOKEN]):
-    LOGGER.error("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.")
+    print("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.", file=sys.stderr)
     raise SystemExit(1)
 
 API_ID = int(API_ID)
@@ -83,7 +83,7 @@ class RoseClient(Client):
         LOGGER.info("🔗 Registering handler %s (group=%s)", name, group)
 
         # Skip wrapping for simple debug/log handlers to avoid recursion
-        if name in {"log_all_messages", "_debug_message", "_debug_query", "_debug_raw"}:
+        if name in {"log_all_messages", "_debug_query", "_debug_raw"}:
             return super().add_handler(handler, group)
 
         async def wrapped(client, *args, **kwargs):
@@ -119,33 +119,19 @@ filters.command = _command_patch
 # -------------------------------------------------------------
 # Debug Handlers
 # -------------------------------------------------------------
-async def _debug_message(client: Client, message):
-    try:
-        LOGGER.debug(
-            "[MSG] %s (%s) in %s (%s): %s",
-            message.from_user.first_name if message.from_user else "N/A",
-            message.from_user.id if message.from_user else "N/A",
-            message.chat.title if message.chat else "PM",
-            message.chat.id if message.chat else "N/A",
-            (message.text or message.caption or "").replace("\n", " "),
-        )
-    except Exception:
-        pass  # Avoid crash
-
 async def _debug_query(client: Client, query):
-    LOGGER.debug(
-        "[CB] %s (%s) in %s (%s): %s",
-        query.from_user.first_name if query.from_user else "N/A",
-        query.from_user.id if query.from_user else "N/A",
-        query.message.chat.title if query.message else "PM",
-        query.message.chat.id if query.message else "N/A",
-        query.data,
-    )
+    try:
+        user = query.from_user.id if query.from_user else "N/A"
+        chat = query.message.chat.id if query.message else "PM"
+        print(f"[CB] {user} in {chat}: {query.data}")
+    except Exception:
+        pass
 
 async def _debug_raw(client: Client, update, users, chats):
-    LOGGER.debug("[RAW] %s", update)
-
-app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
+    try:
+        print(f"[RAW] {update}")
+    except Exception:
+        pass
 app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 
