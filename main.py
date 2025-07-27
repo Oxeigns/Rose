@@ -87,9 +87,11 @@ class RoseClient(Client):
         if name in {"log_all_messages", "_debug_query", "_debug_raw"}:
             return super().add_handler(handler, group)
 
+        orig_callback = handler.callback
+
         async def wrapped(client, *args, **kwargs):
             try:
-                await handler.callback(client, *args, **kwargs)
+                await orig_callback(client, *args, **kwargs)
             except RecursionError as e:
                 print(f"RecursionError in handler {name}: {e}", file=sys.stderr)
             except Exception as e:
