@@ -1,9 +1,17 @@
+import asyncio
+import logging
+
 from pyrogram import Client, filters
 from modules.constants import PREFIXES
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ChatPermissions
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.types import (
+    CallbackQuery,
+    ChatPermissions,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
+from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from utils.decorators import admin_required
-import asyncio
 CAPTCHA_CHATS = set()
 PENDING = {}
 
@@ -34,7 +42,7 @@ async def handle_new_user(client: Client, message: Message):
                 await client.kick_chat_member(chat_id, user.id)
                 await sent.edit_text(f'⏱ {user.mention} failed to verify in time. Kicked.')
         except Exception as e:
-            print(f'Captcha error: {e}')
+            logging.exception("Captcha error: %s", e)
 
 async def captcha_verify(client: Client, query: CallbackQuery):
     user_id = int(query.data.split(':')[1])
@@ -49,6 +57,7 @@ async def captcha_verify(client: Client, query: CallbackQuery):
         await query.message.delete()
         await query.answer('✅ You’ve been verified!', show_alert=True)
     except Exception as e:
+        logging.exception("Captcha verification failed: %s", e)
         await query.answer('❌ Could not verify. Try again or contact admin.', show_alert=True)
 
 
