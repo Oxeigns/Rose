@@ -1,15 +1,19 @@
+"""Configuration module for environment variables."""
+
 import os
 from dotenv import load_dotenv
 
+# Load variables from .env file (if present)
 load_dotenv()
 
-API_ID = int(os.environ.get("API_ID", "123456"))
-API_HASH = os.environ.get("API_HASH", "YOUR_API_HASH")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
+# Telegram API credentials
+API_ID = int(os.getenv("API_ID", "123456"))
+API_HASH = os.getenv("API_HASH", "YOUR_API_HASH")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN")
 
-OWNER_ID = (
-    int(os.environ.get("OWNER_ID", "0"))
-    if os.environ.get("OWNER_ID")
-    else None
-)
-LOG_GROUP_ID = None  # group logging disabled
+# Optional owner ID (can be None)
+OWNER_ID_ENV = os.getenv("OWNER_ID")
+OWNER_ID = int(OWNER_ID_ENV) if OWNER_ID_ENV else None
+
+# Logging group (disabled if None)
+LOG_GROUP_ID = None
