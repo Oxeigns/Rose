@@ -36,7 +36,6 @@ logging.getLogger().addHandler(error_handler)
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.DEBUG)
 
-
 # Asyncio loop exception handling
 def _loop_exception_handler(loop, context) -> None:
     exc = context.get("exception")
@@ -45,7 +44,6 @@ def _loop_exception_handler(loop, context) -> None:
         LOGGER.exception("Unhandled exception: %s", exc)
     elif msg:
         LOGGER.error("Unhandled exception: %s", msg)
-
 
 asyncio.get_event_loop().set_exception_handler(_loop_exception_handler)
 
@@ -92,14 +90,8 @@ class RoseClient(Client):
         async def wrapped(client, *args, **kwargs):
             try:
                 await orig_callback(client, *args, **kwargs)
-            except RecursionError as e:
-                print(f"RecursionError in handler {name}: {e}", file=sys.stderr)
-            except Exception as e:
-                # Avoid recursion here
-                try:
-                    LOGGER.exception("❌ Error in handler %s: %s", name, e)
-                except Exception:
-                    print(f"Handler {name} crashed: {e}", file=sys.stderr)
+            except Exception:
+                LOGGER.exception(f"❌ Exception in handler {name}")
 
         handler.callback = wrapped
         return super().add_handler(handler, group)
@@ -114,47 +106,31 @@ app = RoseClient(
 
 # Patch filters.command globally
 _orig_command = filters.command
-
-
 def _command_patch(commands, prefixes=None, *args, **kwargs):
     prefixes = prefixes or COMMAND_PREFIXES
     return _orig_command(commands, prefixes=prefixes, *args, **kwargs)
-
-
 filters.command = _command_patch
 
 # -------------------------------------------------------------
 # Debug Handlers
 # -------------------------------------------------------------
 async def _debug_query(client: Client, query):
-    try:
-        user = query.from_user.id if query.from_user else "N/A"
-        chat = query.message.chat.id if query.message else "PM"
-        print(f"[CB] {user} in {chat}: {query.data}")
-    except Exception:
-        pass
-
+    user = query.from_user.id if query.from_user else "N/A"
+    chat = query.message.chat.id if query.message else "PM"
+    LOGGER.debug(f"[CB] {user} in {chat}: {query.data}")
 
 async def _debug_message(client: Client, message):
     """Lightweight debug logger for incoming messages."""
-    try:
-        if message.from_user and message.from_user.is_self:
-            return
-        user = message.from_user.id if message.from_user else "N/A"
-        chat = message.chat.id if message.chat else "PM"
-        text = message.text or message.caption or ""
-        clean_text = text.replace("\n", " ")
-        print(f"[MSG] {user} in {chat}: {clean_text}")
-    except Exception:
-        pass
-
+    if message.from_user and message.from_user.is_self:
+        return
+    user = message.from_user.id if message.from_user else "N/A"
+    chat = message.chat.id if message.chat else "PM"
+    text = message.text or message.caption or ""
+    clean_text = text.replace("\n", " ")
+    LOGGER.debug(f"[MSG] {user} in {chat}: {clean_text}")
 
 async def _debug_raw(client: Client, update, users, chats):
-    try:
-        print(f"[RAW] {update}")
-    except Exception:
-        pass
-
+    LOGGER.debug(f"[RAW] {update}")
 
 app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
@@ -166,49 +142,31 @@ app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
 @app.on_message(filters.all)
 async def log_all_messages(client: Client, message):
     """Safely log messages without deep object introspection."""
-    try:
-        # Ignore messages sent by the bot itself
-        if message.from_user and message.from_user.is_self:
-            return
-
-        user = message.from_user.id if message.from_user else "unknown"
-        text = message.text or message.caption or "<no text>"
-        print(f"Message from {user}: {text}")
-    except Exception as e:
-        print("Error in log_all_messages:", e, file=sys.stderr)
+    if message.from_user and message.from_user.is_self:
+        return
+    user = message.from_user.id if message.from_user else "unknown"
+    text = message.text or message.caption or "<no text>"
+    LOGGER.debug(f"Message from {user}: {text}")
 
 # -------------------------------------------------------------
 # Webhook utils
 # -------------------------------------------------------------
 async def _delete_webhook(client: Client) -> None:
     LOGGER.debug("🌐 Deleting existing webhook (if any)...")
-    try:
-        if hasattr(client, "delete_webhook"):
-            await client.delete_webhook(drop_pending_updates=True)
-    except Exception as e:
-        LOGGER.warning("⚠️ Exception while deleting webhook: %s", e)
-
+    if hasattr(client, "delete_webhook"):
+        await client.delete_webhook(drop_pending_updates=True)
 
 async def _set_webhook(client: Client) -> None:
     if not WEBHOOK_URL:
         return
     LOGGER.debug("🌐 Setting webhook to %s", WEBHOOK_URL)
-    try:
-        await client.set_webhook(WEBHOOK_URL)
-    except Exception as e:
-        LOGGER.warning("⚠️ Exception while setting webhook: %s", e)
+    await client.set_webhook(WEBHOOK_URL)
 
 # -------------------------------------------------------------
 # Main
 # -------------------------------------------------------------
 async def _startup() -> None:
-    """Load plugins and initialize the database."""
-    try:
-        plugin_count = register_all(app)
-    except Exception as e:
-        LOGGER.exception("❌ Failed loading plugins: %s", e)
-        raise
-
+    plugin_count = register_all(app)
     LOGGER.debug("📚 Initializing database...")
     await init_db()
     LOGGER.info("✅ Database ready")
@@ -221,9 +179,7 @@ async def _startup() -> None:
         len(app.dispatcher.groups),
     )
 
-
 async def _run_polling() -> None:
-    """Start the bot using long polling."""
     LOGGER.info("🚀 Starting Rose bot in polling mode...")
     async with app:
         await _delete_webhook(app)
@@ -232,9 +188,7 @@ async def _run_polling() -> None:
         await idle()
     LOGGER.info("✅ Bot stopped cleanly.")
 
-
 async def _run_webhook() -> None:
-    """Start the bot with a FastAPI webhook server."""
     LOGGER.info("🚀 Starting Rose bot in webhook mode...")
     from web import setup, web_app
     import uvicorn
@@ -259,7 +213,6 @@ async def _run_webhook() -> None:
             LOGGER.info("Server task cancelled during shutdown.")
         await app.stop()
     LOGGER.info("✅ Bot stopped cleanly.")
-
 
 if __name__ == "__main__":
     try:
