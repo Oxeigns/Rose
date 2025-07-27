@@ -46,6 +46,7 @@ def _loop_exception_handler(loop, context) -> None:
     elif msg:
         LOGGER.error("Unhandled exception: %s", msg)
 
+
 asyncio.get_event_loop().set_exception_handler(_loop_exception_handler)
 
 # -------------------------------------------------------------
@@ -82,7 +83,7 @@ class RoseClient(Client):
         name = getattr(handler.callback, "__name__", str(handler.callback))
         LOGGER.info("🔗 Registering handler %s (group=%s)", name, group)
 
-        # Skip wrapping for simple debug/log handlers to avoid recursion
+        # Skip wrapping for debug handlers to avoid recursion
         if name in {"log_all_messages", "_debug_query", "_debug_raw"}:
             return super().add_handler(handler, group)
 
@@ -111,9 +112,13 @@ app = RoseClient(
 
 # Patch filters.command globally
 _orig_command = filters.command
+
+
 def _command_patch(commands, prefixes=None, *args, **kwargs):
     prefixes = prefixes or COMMAND_PREFIXES
     return _orig_command(commands, prefixes=prefixes, *args, **kwargs)
+
+
 filters.command = _command_patch
 
 # -------------------------------------------------------------
@@ -126,6 +131,7 @@ async def _debug_query(client: Client, query):
         print(f"[CB] {user} in {chat}: {query.data}")
     except Exception:
         pass
+
 
 async def _debug_message(client: Client, message):
     """Lightweight debug logger for incoming messages."""
@@ -140,11 +146,14 @@ async def _debug_message(client: Client, message):
     except Exception:
         pass
 
+
 async def _debug_raw(client: Client, update, users, chats):
     try:
         print(f"[RAW] {update}")
     except Exception:
         pass
+
+
 app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
@@ -156,13 +165,12 @@ app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
 async def log_all_messages(client: Client, message):
     """Safely log messages without deep object introspection."""
     try:
-        # Ignore messages sent by the bot itself to avoid noisy loops
+        # Ignore messages sent by the bot itself
         if message.from_user and message.from_user.is_self:
             return
 
         user = message.from_user.id if message.from_user else "unknown"
         text = message.text or message.caption or "<no text>"
-        # Avoid using LOGGER here to prevent logging loops
         print(f"Message from {user}: {text}")
     except Exception as e:
         print("Error in log_all_messages:", e, file=sys.stderr)
@@ -177,6 +185,7 @@ async def _delete_webhook(client: Client) -> None:
             await client.delete_webhook(drop_pending_updates=True)
     except Exception as e:
         LOGGER.warning("⚠️ Exception while deleting webhook: %s", e)
+
 
 async def _set_webhook(client: Client) -> None:
     if not WEBHOOK_URL:
@@ -242,9 +251,13 @@ async def _run_webhook() -> None:
         await idle()
     finally:
         server.should_exit = True
-        await server_task
+        try:
+            await server_task
+        except asyncio.CancelledError:
+            LOGGER.info("Server task cancelled during shutdown.")
         await app.stop()
     LOGGER.info("✅ Bot stopped cleanly.")
+
 
 if __name__ == "__main__":
     try:
