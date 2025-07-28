@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message, CallbackQuery
 from utils.markdown import escape_markdown
@@ -10,23 +11,23 @@ from utils.db import add_filter, remove_filter, list_filters, get_filter, clear_
 @is_admin
 async def add_filter_cmd(client: Client, message: Message):
     if len(message.command) < 3:
-        await message.reply_text('Usage: `/filter <word> <response>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/filter <word> <response>`', parse_mode=ParseMode.MARKDOWN)
         return
     keyword = message.command[1].lower()
     response = ' '.join(message.command[2:])
     add_filter(message.chat.id, keyword, response)
     safe_key = escape_markdown(keyword)
-    await message.reply_text(f'✅ Filter `"{safe_key}"` added.', parse_mode='markdown')
+    await message.reply_text(f'✅ Filter `"{safe_key}"` added.', parse_mode=ParseMode.MARKDOWN)
 
 @is_admin
 async def stop_filter_cmd(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/stop <word>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/stop <word>`', parse_mode=ParseMode.MARKDOWN)
         return
     keyword = message.command[1].lower()
     remove_filter(message.chat.id, keyword)
     safe_key = escape_markdown(keyword)
-    await message.reply_text(f'🗑️ Removed filter `"{safe_key}"`.', parse_mode='markdown')
+    await message.reply_text(f'🗑️ Removed filter `"{safe_key}"`.', parse_mode=ParseMode.MARKDOWN)
 
 async def list_filters_cmd(client: Client, message: Message):
     words = list_filters(message.chat.id)
@@ -34,7 +35,7 @@ async def list_filters_cmd(client: Client, message: Message):
         await message.reply_text('❌ No filters have been set in this chat.')
     else:
         text = '**📃 Active Filters:**\n' + '\n'.join((f'• `{w}`' for w in sorted(words)))
-        await message.reply_text(text, parse_mode='markdown')
+        await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 @is_admin
 async def stopall_cmd(client: Client, message: Message):
@@ -62,7 +63,7 @@ async def filters_cb(client: Client, query: CallbackQuery):
         text = 'Use /filters to list all filters.'
     else:
         text = 'Unknown command.'
-    await query.message.edit_text(text, reply_markup=filters_panel(), parse_mode='markdown')
+    await query.message.edit_text(text, reply_markup=filters_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

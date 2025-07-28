@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message, CallbackQuery
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -52,7 +53,7 @@ async def anonadmin(client: Client, message: Message):
         return
     value = args[1].lower()
     if value not in ['on', 'off']:
-        await message.reply_text('Usage: `/anonadmin on|off`', parse_mode='markdown')
+        await message.reply_text('Usage: `/anonadmin on|off`', parse_mode=ParseMode.MARKDOWN)
         return
     set_chat_setting(message.chat.id, 'anonadmin', value)
     await message.reply_text(f'✅ Anon admin setting updated to `{value}`.')
@@ -66,14 +67,14 @@ async def adminerror(client: Client, message: Message):
         return
     value = args[1].lower()
     if value not in ['on', 'off']:
-        await message.reply_text('Usage: `/adminerror on|off`', parse_mode='markdown')
+        await message.reply_text('Usage: `/adminerror on|off`', parse_mode=ParseMode.MARKDOWN)
         return
     set_chat_setting(message.chat.id, 'adminerror', value)
     await message.reply_text(f'✅ Admin error setting updated to `{value}`.')
 
 @is_admin
 async def admin_menu(client: Client, message: Message):
-    await message.reply_text('**🛠 Admin Panel**\nChoose what you want to manage:', reply_markup=admin_panel(), parse_mode='markdown')
+    await message.reply_text('**🛠 Admin Panel**\nChoose what you want to manage:', reply_markup=admin_panel(), parse_mode=ParseMode.MARKDOWN)
 
 async def admin_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
@@ -85,7 +86,7 @@ async def admin_cb(client: Client, query: CallbackQuery):
         text = 'Use /adminlist to see all admins.'
     else:
         text = 'Unknown command.'
-    await query.message.edit_text(text, reply_markup=admin_panel(), parse_mode='markdown')
+    await query.message.edit_text(text, reply_markup=admin_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

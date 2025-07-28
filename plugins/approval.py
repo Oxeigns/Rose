@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message, CallbackQuery
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -14,7 +15,7 @@ async def approve_user(client: Client, message: Message):
     user_id = message.reply_to_message.from_user.id
     chat_id = message.chat.id
     await add_approval(chat_id, user_id)
-    await message.reply_text(f'✅ Approved [{user_id}](tg://user?id={user_id}).', parse_mode='markdown')
+    await message.reply_text(f'✅ Approved [{user_id}](tg://user?id={user_id}).', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def unapprove_user(client: Client, message: Message):
@@ -24,7 +25,7 @@ async def unapprove_user(client: Client, message: Message):
     user_id = message.reply_to_message.from_user.id
     chat_id = message.chat.id
     await remove_approval(chat_id, user_id)
-    await message.reply_text(f'🚫 Unapproved [{user_id}](tg://user?id={user_id}).', parse_mode='markdown')
+    await message.reply_text(f'🚫 Unapproved [{user_id}](tg://user?id={user_id}).', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def list_approved(client: Client, message: Message):
@@ -36,7 +37,7 @@ async def list_approved(client: Client, message: Message):
     text = '**✅ Approved Users:**\n'
     for user_id in users:
         text += f'- [User](tg://user?id={user_id}) (`{user_id}`)\n'
-    await message.reply_text(text, parse_mode='markdown')
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def clear_approved(client: Client, message: Message):
@@ -48,14 +49,14 @@ async def clear_approved(client: Client, message: Message):
 async def approval_mode_cmd(client: Client, message: Message):
     if len(message.command) == 1:
         current = get_chat_setting(message.chat.id, 'approval_mode', 'off')
-        await message.reply_text(f'🔏 Approval mode is `{current}`.', parse_mode='markdown')
+        await message.reply_text(f'🔏 Approval mode is `{current}`.', parse_mode=ParseMode.MARKDOWN)
         return
     val = message.command[1].lower()
     if val not in {'on', 'off'}:
-        await message.reply_text('Usage: `/approvalmode <on/off>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/approvalmode <on/off>`', parse_mode=ParseMode.MARKDOWN)
         return
     set_chat_setting(message.chat.id, 'approval_mode', val)
-    await message.reply_text(f'🔏 Approval mode set to `{val}`.', parse_mode='markdown')
+    await message.reply_text(f'🔏 Approval mode set to `{val}`.', parse_mode=ParseMode.MARKDOWN)
 
 async def approvals_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
@@ -67,7 +68,7 @@ async def approvals_cb(client: Client, query: CallbackQuery):
         text = 'Use /approved to list approved users.'
     else:
         text = 'Unknown command.'
-    await query.message.edit_text(text, reply_markup=approvals_panel(), parse_mode='markdown')
+    await query.message.edit_text(text, reply_markup=approvals_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

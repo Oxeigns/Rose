@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -21,7 +22,7 @@ async def create_fed(client: Client, message: Message):
     FEDERATIONS[fed_name] = {'owner': user_id, 'banned_users': set()}
     USER_TO_FEDS.setdefault(user_id, set()).add(fed_name)
     safe = escape_markdown(fed_name)
-    await message.reply_text(f'✅ Federation `{safe}` has been created.', parse_mode='markdown')
+    await message.reply_text(f'✅ Federation `{safe}` has been created.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def join_fed(client: Client, message: Message):
@@ -34,7 +35,7 @@ async def join_fed(client: Client, message: Message):
         return
     GROUP_TO_FED[message.chat.id] = fed_name
     safe = escape_markdown(fed_name)
-    await message.reply_text(f'✅ This group has joined the `{safe}` federation.', parse_mode='markdown')
+    await message.reply_text(f'✅ This group has joined the `{safe}` federation.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def leave_fed(client: Client, message: Message):
@@ -43,7 +44,7 @@ async def leave_fed(client: Client, message: Message):
         return
     fed_name = GROUP_TO_FED.pop(message.chat.id)
     safe = escape_markdown(fed_name)
-    await message.reply_text(f'🚪 Group left the `{safe}` federation.', parse_mode='markdown')
+    await message.reply_text(f'🚪 Group left the `{safe}` federation.', parse_mode=ParseMode.MARKDOWN)
 
 async def list_feds(client: Client, message: Message):
     user_id = message.from_user.id
@@ -54,7 +55,7 @@ async def list_feds(client: Client, message: Message):
     text = '**📡 Your Federations:**\n'
     for fed in user_feds:
         text += f'• `{fed}`\n'
-    await message.reply_text(text, parse_mode='markdown')
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def fed_ban(client: Client, message: Message):
@@ -69,7 +70,7 @@ async def fed_ban(client: Client, message: Message):
     user_id = message.reply_to_message.from_user.id
     FEDERATIONS[fed_name]['banned_users'].add(user_id)
     safe = escape_markdown(fed_name)
-    await message.reply_text(f'🚫 User `{user_id}` has been FedBanned in `{safe}`.', parse_mode='markdown')
+    await message.reply_text(f'🚫 User `{user_id}` has been FedBanned in `{safe}`.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def fed_unban(client: Client, message: Message):
@@ -84,7 +85,7 @@ async def fed_unban(client: Client, message: Message):
     user_id = message.reply_to_message.from_user.id
     FEDERATIONS[fed_name]['banned_users'].discard(user_id)
     safe = escape_markdown(fed_name)
-    await message.reply_text(f'✅ User `{user_id}` has been FedUnbanned in `{safe}`.', parse_mode='markdown')
+    await message.reply_text(f'✅ User `{user_id}` has been FedUnbanned in `{safe}`.', parse_mode=ParseMode.MARKDOWN)
 
 async def enforce_fedban(client: Client, message: Message):
     chat_id = message.chat.id

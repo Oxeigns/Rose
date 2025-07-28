@@ -1,5 +1,6 @@
 import logging
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -102,7 +103,7 @@ async def start_cmd(client: Client, message: Message):
                 [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
             ),
             quote=True,
-            parse_mode="markdown",
+            parse_mode=ParseMode.MARKDOWN,
         )
     else:
         await message.reply("📩 I've sent you a PM with information.")
@@ -114,7 +115,7 @@ async def start_cmd(client: Client, message: Message):
                     reply_markup=InlineKeyboardMarkup(
                         [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
                     ),
-                    parse_mode="markdown",
+                    parse_mode=ParseMode.MARKDOWN,
                 )
             except Exception as e:
                 LOGGER.warning("Cannot PM user: %s", e)
@@ -128,7 +129,7 @@ async def menu_cmd(client: Client, message: Message):
         "**📋 Control Panel**",
         reply_markup=build_menu(),
         quote=True,
-        parse_mode="markdown",
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
@@ -148,7 +149,7 @@ async def help_cmd(client: Client, message: Message):
     from_user_id = getattr(message.from_user, "id", None)
 
     if chat_type == 'private':
-        await message.reply_text(response, reply_markup=help_menu(), parse_mode="markdown")
+        await message.reply_text(response, reply_markup=help_menu(), parse_mode=ParseMode.MARKDOWN)
     else:
         await message.reply("📩 I've sent you a PM with help information.")
         if from_user_id:
@@ -157,7 +158,7 @@ async def help_cmd(client: Client, message: Message):
                     from_user_id,
                     response,
                     reply_markup=help_menu(),
-                    parse_mode="markdown",
+                    parse_mode=ParseMode.MARKDOWN,
                 )
             except Exception as e:
                 LOGGER.warning("Cannot PM user: %s", e)
@@ -189,7 +190,7 @@ async def menu_open_cb(client: Client, query: CallbackQuery):
     await query.message.edit_text(
         "**📋 Control Panel**",
         reply_markup=build_menu(),
-        parse_mode="markdown",
+        parse_mode=ParseMode.MARKDOWN,
     )
     await query.answer()
 
@@ -204,7 +205,7 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
     await query.message.edit_text(
         f"**🔧 {module.title()} Panel**",
         reply_markup=markup,
-        parse_mode="markdown",
+        parse_mode=ParseMode.MARKDOWN,
     )
     await query.answer()
 
@@ -214,7 +215,7 @@ async def menu_cb(client: Client, query: CallbackQuery):
     await query.message.edit_text(
         "**📋 Control Panel**",
         reply_markup=build_menu(),
-        parse_mode="markdown",
+        parse_mode=ParseMode.MARKDOWN,
     )
     await query.answer()
 
@@ -238,7 +239,7 @@ async def help_cb(client: Client, query: CallbackQuery):
         await query.message.delete()
         return
     text = HELP_MODULES.get(mod, "❌ Module not found.")
-    await query.message.edit_text(text, reply_markup=help_menu(), parse_mode="markdown")
+    await query.message.edit_text(text, reply_markup=help_menu(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

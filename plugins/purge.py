@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -17,7 +18,7 @@ async def purge_cmd(client: Client, message):
     ids = list(range(start_id, start_id + limit + 1)) if limit else list(range(start_id, end_id + 1))
     try:
         await client.delete_messages(message.chat.id, ids)
-        await message.reply(f'🧹 Deleted `{len(ids)}` messages.', quote=False, parse_mode='markdown')
+        await message.reply(f'🧹 Deleted `{len(ids)}` messages.', quote=False, parse_mode=ParseMode.MARKDOWN)
     except Exception:
         await message.reply('⚠️ Failed to purge messages.')
 
@@ -51,12 +52,12 @@ async def purge_from_cmd(client: Client, message):
 async def purge_to_cmd(client: Client, message):
     start = purge_points.get(message.chat.id)
     if not start:
-        await message.reply('⚠️ No purge point set. Use `/purgefrom` first.', parse_mode='markdown')
+        await message.reply('⚠️ No purge point set. Use `/purgefrom` first.', parse_mode=ParseMode.MARKDOWN)
         return
     ids = list(range(start, message.id + 1))
     try:
         await client.delete_messages(message.chat.id, ids)
-        await message.reply(f'🧹 Deleted `{len(ids)}` messages.', quote=False, parse_mode='markdown')
+        await message.reply(f'🧹 Deleted `{len(ids)}` messages.', quote=False, parse_mode=ParseMode.MARKDOWN)
     except Exception:
         await message.reply('⚠️ Failed to purge messages.')
     purge_points.pop(message.chat.id, None)

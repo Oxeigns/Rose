@@ -1,5 +1,6 @@
 import random
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
@@ -13,7 +14,7 @@ async def get_id(client: Client, message: Message):
         target = message.reply_to_message.from_user
     else:
         target = message.from_user
-    await message.reply_text(f'🆔 ID: `{target.id}`', parse_mode='markdown')
+    await message.reply_text(f'🆔 ID: `{target.id}`', parse_mode=ParseMode.MARKDOWN)
 
 async def info(client: Client, message: Message):
     user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
@@ -22,15 +23,15 @@ async def info(client: Client, message: Message):
         text += f'\nUsername: @{user.username}'
     if user.bio:
         text += f'\nBio: {user.bio}'
-    await message.reply_text(text, parse_mode='markdown')
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 async def donate(client: Client, message: Message):
-    await message.reply_text("[❤️ Donate here](https://example.com/donate) to support the bot's development!", disable_web_page_preview=True, parse_mode='markdown')
+    await message.reply_text("[❤️ Donate here](https://example.com/donate) to support the bot's development!", disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN)
 
 async def markdown_help(client: Client, message: Message):
     if message.chat.type != 'private':
         await message.reply('📬 I’ve sent you the Markdown guide in private.')
-    await client.send_message(message.from_user.id, '**✏️ Markdown Guide**\nUse:\n- `*bold*`\n- `_italic_`\n- `[text](url)`', parse_mode='markdown')
+    await client.send_message(message.from_user.id, '**✏️ Markdown Guide**\nUse:\n- `*bold*`\n- `_italic_`\n- `[text](url)`', parse_mode=ParseMode.MARKDOWN)
 
 async def limits(client: Client, message: Message):
     await message.reply_text('🚫 No limits are currently enforced.')

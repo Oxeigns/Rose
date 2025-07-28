@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -17,7 +18,7 @@ async def toggle_antiraid(client: Client, message: Message):
         return
     status = args[1].lower()
     if status not in ['on', 'off']:
-        await message.reply_text('Usage: `/antiraid on|off`', parse_mode='markdown')
+        await message.reply_text('Usage: `/antiraid on|off`', parse_mode=ParseMode.MARKDOWN)
         return
     ANTIRAID_STATUS[message.chat.id] = status
     await message.reply_text(f'✅ Antiraid mode set to `{status}`.')
