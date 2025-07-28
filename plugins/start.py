@@ -134,17 +134,6 @@ async def help_cmd(client: Client, message: Message):
         except Exception:
             await message.reply("❌ I can't message you. Please start me in PM first.")
 
-@catch_errors
-async def test_cmd(client: Client, message: Message):
-    LOGGER.debug('📩 /test received')
-    if message.chat.type == 'private':
-        await message.reply_text('✅ Test command received!')
-    else:
-        await message.reply("📩 Check your PM for the test result.")
-        try:
-            await client.send_message(message.from_user.id, '✅ Test command received!')
-        except Exception:
-            await message.reply("❌ I can't message you. Please start me in PM first.")
 
 async def menu_open_cb(client: Client, query: CallbackQuery):
     LOGGER.debug('🟢 menu:open callback')
@@ -196,10 +185,6 @@ def register(app):
     )
     app.add_handler(
         MessageHandler(help_cmd, filters.command("help", prefixes=PREFIXES)),
-        group=0,
-    )
-    app.add_handler(
-        MessageHandler(test_cmd, filters.command("test", prefixes=PREFIXES)),
         group=0,
     )
     app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex('^menu:open$')), group=0)
