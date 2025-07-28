@@ -75,13 +75,13 @@ COMMAND_PREFIXES = ["/", "!", "."]
 # Custom Client
 # -------------------------------------------------------------
 class RoseClient(Client):
-    """Client subclass that logs handler registration and prevents recursion."""
+    """Client subclass that logs handler registration and wraps exceptions."""
 
     def add_handler(self, handler, group=0):
         name = getattr(handler.callback, "__name__", str(handler.callback))
         LOGGER.info("🔗 Registering handler %s (group=%s)", name, group)
 
-        # Skip wrapping for debug handlers to avoid recursion
+        # Skip wrapping for debug handlers
         if name in {"log_all_messages", "_debug_query", "_debug_raw"}:
             return super().add_handler(handler, group)
 
@@ -104,7 +104,7 @@ app = RoseClient(
     bot_token=BOT_TOKEN,
 )
 
-# Patch filters.command globally
+# Patch filters.command globally to allow multiple prefixes
 _orig_command = filters.command
 def _command_patch(commands, prefixes=None, *args, **kwargs):
     prefixes = prefixes or COMMAND_PREFIXES
@@ -135,18 +135,6 @@ async def _debug_raw(client: Client, update, users, chats):
 app.add_handler(CallbackQueryHandler(_debug_query), group=-1)
 app.add_handler(RawUpdateHandler(_debug_raw), group=-1)
 app.add_handler(MessageHandler(_debug_message, filters.all), group=-1)
-
-# -------------------------------------------------------------
-# Safe log_all_messages
-# -------------------------------------------------------------
-@app.on_message(filters.all)
-async def log_all_messages(client: Client, message):
-    """Safely log messages without deep object introspection."""
-    if message.from_user and message.from_user.is_self:
-        return
-    user = message.from_user.id if message.from_user else "unknown"
-    text = message.text or message.caption or "<no text>"
-    LOGGER.debug(f"Message from {user}: {text}")
 
 # -------------------------------------------------------------
 # Webhook utils
