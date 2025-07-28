@@ -11,7 +11,9 @@ async def log_all_messages(client: Client, message: Message) -> None:
     user = message.from_user.id if message.from_user else "N/A"
     chat = message.chat.id if message.chat else "PM"
     text = message.text or message.caption or ""
-    print(f"[DBG] {user} in {chat}: {text.replace('\\n', ' ')}")
+    # Avoid backslashes inside f-string expressions by pre-processing
+    clean = text.replace("\n", " ")
+    print(f"[DBG] {user} in {chat}: {clean}")
 
 
 async def log_queries(client: Client, query: CallbackQuery) -> None:

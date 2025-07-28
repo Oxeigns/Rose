@@ -54,6 +54,7 @@ from modules.buttons import (
     warnings_panel,
 )
 from modules.constants import PREFIXES
+from db.broadcast import add_user
 
 LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +168,8 @@ async def start_cmd(client: Client, message: Message):
     )
 
     if chat_type == "private":
+        if user_id:
+            await add_user(user_id)
         await message.reply_text(
             private_text,
             reply_markup=InlineKeyboardMarkup(
