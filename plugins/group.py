@@ -1,16 +1,10 @@
 import logging
 from pyrogram import Client, filters
-from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 from utils.errors import catch_errors
-from db.broadcast import add_user, add_group, remove_group
+from db.broadcast import add_group, remove_group
 logger = logging.getLogger(__name__)
-
-@catch_errors
-async def start_in_private(client: Client, message: Message):
-    logger.info('📥 /start by user %s in PM', message.from_user.id)
-    await add_user(message.from_user.id)
 
 @catch_errors
 async def bot_added(client: Client, message: Message):
@@ -28,6 +22,5 @@ async def bot_removed(client: Client, message: Message):
 
 
 def register(app):
-    app.add_handler(MessageHandler(start_in_private, filters.command('start', prefixes=PREFIXES) & filters.private), group=0)
     app.add_handler(MessageHandler(bot_added, filters.new_chat_members & filters.group), group=0)
     app.add_handler(MessageHandler(bot_removed, filters.left_chat_member & filters.group), group=0)

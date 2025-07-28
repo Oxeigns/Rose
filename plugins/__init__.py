@@ -2,8 +2,8 @@
 
 import importlib
 import logging
-import pkgutil
 import traceback
+from pathlib import Path
 from typing import Any
 
 LOGGER = logging.getLogger(__name__)
@@ -16,16 +16,18 @@ def register_all(app: Any) -> int:
     Returns the number of successfully loaded modules.
     """
     loaded = 0
-    for module_info in pkgutil.iter_modules(__path__):
-        if module_info.name.startswith("_"):
+    plugin_dir = Path(__file__).parent
+    for file in sorted(plugin_dir.glob("*.py")):
+        if file.name == "__init__.py":
             continue
+        module_name = f"{__name__}.{file.stem}"
         try:
-            LOGGER.info("🔄 Importing plugin %s", module_info.name)
-            module = importlib.import_module(f"{__name__}.{module_info.name}")
+            LOGGER.info("🔄 Importing plugin %s", file.stem)
+            module = importlib.import_module(module_name)
         except Exception:
-            LOGGER.error(
+            LOGGER.warning(
                 "❌ Failed to import plugin %s\n%s",
-                module_info.name,
+                file.stem,
                 traceback.format_exc()
             )
             continue
@@ -34,15 +36,15 @@ def register_all(app: Any) -> int:
             try:
                 module.register(app)
                 loaded += 1
-                LOGGER.info("✅ Loaded plugin %s", module_info.name)
+                LOGGER.info("✅ Loaded plugin %s", file.stem)
             except Exception:
-                LOGGER.error(
+                LOGGER.warning(
                     "❌ Error while registering handlers in %s\n%s",
-                    module_info.name,
+                    file.stem,
                     traceback.format_exc()
                 )
         else:
-            LOGGER.warning("⚠️ Plugin %s has no register()", module_info.name)
+            LOGGER.warning("⚠️ Plugin %s has no register()", file.stem)
 
     LOGGER.info("📦 Plugin loading complete (%d modules)", loaded)
     return loaded
