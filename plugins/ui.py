@@ -1,4 +1,13 @@
-"""Telegram UI plugin handling start, menu, and help commands."""
+"""
+Telegram Bot UI Handlers for:
+- /start
+- /menu
+- /help
+- /test
+
+This module builds the main control panel and help interface
+for a Rose-style moderation bot.
+"""
 
 import logging
 from pyrogram import Client, filters
@@ -26,7 +35,10 @@ from modules.constants import PREFIXES
 
 LOGGER = logging.getLogger(__name__)
 
-# --- Button layout configuration ---
+# =====================================================
+# PANEL CONFIGURATION
+# =====================================================
+
 MODULE_BUTTONS = [
     ("⚙️ Admin", "admin:open"),
     ("💬 Filters", "filters:open"),
@@ -48,162 +60,182 @@ MODULE_PANELS = {
 }
 
 
-# --- Helper functions for menus ---
-def build_menu() -> InlineKeyboardMarkup:
-    """Builds the main control panel menu buttons."""
-    keys, temp = [], []
-    for text, cb in MODULE_BUTTONS:
-        temp.append(InlineKeyboardButton(text, callback_data=cb))
-        if len(temp) == 2:
-            keys.append(temp)
+# =====================================================
+# UTILITY FUNCTIONS
+# =====================================================
+
+def _chunk_buttons(buttons, row_size=2):
+    """Split buttons into rows of given size."""
+    rows, temp = [], []
+    for btn in buttons:
+        temp.append(InlineKeyboardButton(*btn))
+        if len(temp) == row_size:
+            rows.append(temp)
             temp = []
     if temp:
-        keys.append(temp)
-    keys.append([InlineKeyboardButton('❌ Close', callback_data='menu:close')])
-    return InlineKeyboardMarkup(keys)
+        rows.append(temp)
+    return rows
+
+
+def build_menu() -> InlineKeyboardMarkup:
+    """Main control panel menu."""
+    rows = _chunk_buttons(MODULE_BUTTONS)
+    rows.append([InlineKeyboardButton("❌ Close", callback_data="menu:close")])
+    return InlineKeyboardMarkup(rows)
 
 
 def help_menu() -> InlineKeyboardMarkup:
-    """Builds the help menu buttons based on HELP_MODULES."""
-    keys, temp = [], []
-    for mod in sorted(HELP_MODULES.keys(), key=str.lower) if HELP_MODULES else []:
-        temp.append(InlineKeyboardButton(mod.title(), callback_data=f'help:{mod}'))
-        if len(temp) == 2:
-            keys.append(temp)
-            temp = []
-    if temp:
-        keys.append(temp)
-    keys.append([InlineKeyboardButton('❌ Close', callback_data='help:close')])
-    return InlineKeyboardMarkup(keys)
+    """Help panel menu based on available modules."""
+    buttons = []
+    if HELP_MODULES:
+        for mod in sorted(HELP_MODULES.keys(), key=str.lower):
+            buttons.append((mod.title(), f"help:{mod}"))
+    rows = _chunk_buttons(buttons)
+    rows.append([InlineKeyboardButton("❌ Close", callback_data="help:close")])
+    return InlineKeyboardMarkup(rows)
 
 
-# --- Utility for clean logging ---
 def log_command(message: Message):
+    """Log commands in debug mode for traceability."""
     raw = getattr(message, "text", "")
     cmd = message.command[0] if hasattr(message, "command") and message.command else raw
-    LOGGER.debug("📩 Command: %s | Raw input: %s", cmd, raw)
+    LOGGER.debug("Command: %s | Raw input: %s", cmd, raw)
 
 
-# --- Command Handlers ---
+async def _pm_user(client: Client, user_id: int, text: str, reply_markup=None):
+    """Safely attempt to PM a user, with fallback logging."""
+    try:
+        await client.send_message(
+            user_id,
+            text,
+            reply_markup=reply_markup,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+    except Exception as e:
+        LOGGER.warning("Unable to PM user %s: %s", user_id, e)
+        return False
+    return True
+
+
+# =====================================================
+# COMMAND HANDLERS
+# =====================================================
+
 @catch_errors
 async def start_cmd(client: Client, message: Message):
+    """Handle the /start command."""
     log_command(message)
 
     chat_type = getattr(message.chat, "type", "")
-    from_user_id = getattr(message.from_user, "id", None)
+    user_id = getattr(message.from_user, "id", None)
 
-    text = (
-        "**Thanks for adding me!**\nUse /menu to configure moderation."
-        if chat_type in ['group', 'supergroup']
-        else "**🌹 Rose Bot**\nI help moderate and protect your group."
+    private_text = (
+        "**🌹 Rose Bot**\n"
+        "I help you manage, moderate, and secure your group.\n\n"
+        "Use the menu below to configure my features."
     )
 
-    if chat_type == 'private':
+    group_text = (
+        "**Thanks for adding me!**\n\n"
+        "Use `/menu` here or open the PM I just sent you."
+    )
+
+    if chat_type == "private":
         await message.reply_text(
-            text,
+            private_text,
             reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
+                [[InlineKeyboardButton("📋 Open Menu", callback_data="menu:open")]]
             ),
-            quote=True,
             parse_mode=ParseMode.MARKDOWN,
         )
     else:
-        await message.reply("📩 I've sent you a PM with information.")
-        if from_user_id:
-            try:
-                await client.send_message(
-                    from_user_id,
-                    text,
-                    reply_markup=InlineKeyboardMarkup(
-                        [[InlineKeyboardButton('📋 Menu', callback_data='menu:open')]]
-                    ),
-                    parse_mode=ParseMode.MARKDOWN,
-                )
-            except Exception as e:
-                LOGGER.warning("Cannot PM user: %s", e)
-                await message.reply("❌ I can't message you. Please start me in PM first.")
+        await message.reply("📩 I've sent you a PM with configuration options.")
+        if user_id:
+            success = await _pm_user(
+                client,
+                user_id,
+                private_text,
+                InlineKeyboardMarkup([[InlineKeyboardButton("📋 Open Menu", callback_data="menu:open")]]),
+            )
+            if not success:
+                await message.reply("❌ Please start me in private to access settings.")
 
 
 @catch_errors
 async def menu_cmd(client: Client, message: Message):
+    """Handle the /menu command."""
     log_command(message)
     await message.reply_text(
         "**📋 Control Panel**",
         reply_markup=build_menu(),
-        quote=True,
         parse_mode=ParseMode.MARKDOWN,
     )
 
 
 @catch_errors
 async def help_cmd(client: Client, message: Message):
+    """Handle the /help command."""
     log_command(message)
 
-    mod = message.command[1].lower() if len(message.command) > 1 else None
+    cmd_parts = getattr(message, "command", [])
+    mod = cmd_parts[1].lower() if len(cmd_parts) > 1 else None
+
     if mod and HELP_MODULES and mod in HELP_MODULES:
         response = HELP_MODULES[mod]
     elif mod:
         response = "❌ Unknown module.\nUse `/help` to see available modules."
     else:
-        response = "**🛠 Help Panel**\nClick a button below to view module commands:"
+        response = "**🛠 Help Panel**\nSelect a module to see its commands:"
 
     chat_type = getattr(message.chat, "type", "")
-    from_user_id = getattr(message.from_user, "id", None)
+    user_id = getattr(message.from_user, "id", None)
 
-    if chat_type == 'private':
+    if chat_type == "private":
         await message.reply_text(response, reply_markup=help_menu(), parse_mode=ParseMode.MARKDOWN)
     else:
         await message.reply("📩 I've sent you a PM with help information.")
-        if from_user_id:
-            try:
-                await client.send_message(
-                    from_user_id,
-                    response,
-                    reply_markup=help_menu(),
-                    parse_mode=ParseMode.MARKDOWN,
-                )
-            except Exception as e:
-                LOGGER.warning("Cannot PM user: %s", e)
-                await message.reply("❌ I can't message you. Please start me in PM first.")
+        if user_id:
+            success = await _pm_user(client, user_id, response, help_menu())
+            if not success:
+                await message.reply("❌ Please start me in private to access help.")
 
 
 @catch_errors
 async def test_cmd(client: Client, message: Message):
+    """Handle /test command for quick responsiveness check."""
     log_command(message)
 
     chat_type = getattr(message.chat, "type", "")
-    from_user_id = getattr(message.from_user, "id", None)
+    user_id = getattr(message.from_user, "id", None)
 
-    if chat_type == 'private':
+    if chat_type == "private":
         await message.reply_text("✅ Test command received!")
     else:
-        await message.reply("📩 Check your PM for the test result.")
-        if from_user_id:
-            try:
-                await client.send_message(from_user_id, "✅ Test command received!")
-            except Exception as e:
-                LOGGER.warning("Cannot PM user: %s", e)
-                await message.reply("❌ I can't message you. Please start me in PM first.")
+        await message.reply("📩 I've sent you a PM with the test result.")
+        if user_id:
+            success = await _pm_user(client, user_id, "✅ Test command received!")
+            if not success:
+                await message.reply("❌ Please start me in private first.")
 
 
-# --- Callback Query Handlers ---
+# =====================================================
+# CALLBACK HANDLERS
+# =====================================================
+
 async def menu_open_cb(client: Client, query: CallbackQuery):
-    LOGGER.debug("🟢 Callback data: %s", query.data)
-    await query.message.edit_text(
-        "**📋 Control Panel**",
-        reply_markup=build_menu(),
-        parse_mode=ParseMode.MARKDOWN,
-    )
+    await query.message.edit_text("**📋 Control Panel**", reply_markup=build_menu(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 
 async def panel_open_cb(client: Client, query: CallbackQuery):
-    LOGGER.debug("🟢 Callback data: %s", query.data)
     module = query.data.split(":")[0]
+    LOGGER.debug("Opening panel: %s", module)
+
     panel_func = MODULE_PANELS.get(module)
     markup = panel_func() if panel_func else InlineKeyboardMarkup(
         [[InlineKeyboardButton("⬅️ Back", callback_data="menu:open")]]
     )
+
     await query.message.edit_text(
         f"**🔧 {module.title()} Panel**",
         reply_markup=markup,
@@ -212,30 +244,12 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
     await query.answer()
 
 
-async def menu_cb(client: Client, query: CallbackQuery):
-    LOGGER.debug("🟢 Callback data: %s", query.data)
-    await query.message.edit_text(
-        "**📋 Control Panel**",
-        reply_markup=build_menu(),
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    await query.answer()
-
-
 async def close_cb(client: Client, query: CallbackQuery):
-    LOGGER.debug("🟢 Callback data: %s", query.data)
-    await query.message.delete()
-    await query.answer()
-
-
-async def close_main_cb(client: Client, query: CallbackQuery):
-    LOGGER.debug("🟢 Callback data: %s", query.data)
     await query.message.delete()
     await query.answer()
 
 
 async def help_cb(client: Client, query: CallbackQuery):
-    LOGGER.debug("🟢 Callback data: %s", query.data)
     mod = query.data.split(":")[1]
     if mod == "close":
         await query.message.delete()
@@ -245,20 +259,21 @@ async def help_cb(client: Client, query: CallbackQuery):
     await query.answer()
 
 
-# --- Registration ---
-def register(app):
-    LOGGER.info("Registering start/menu/help/test handlers...")
+# =====================================================
+# REGISTRATION
+# =====================================================
 
-    # Command Handlers
-    app.add_handler(MessageHandler(start_cmd, filters.command("start", prefixes=PREFIXES)), group=0)
-    app.add_handler(MessageHandler(menu_cmd, filters.command("menu", prefixes=PREFIXES)), group=0)
-    app.add_handler(MessageHandler(help_cmd, filters.command("help", prefixes=PREFIXES)), group=0)
-    app.add_handler(MessageHandler(test_cmd, filters.command("test", prefixes=PREFIXES)), group=0)
+def register(app: Client):
+    LOGGER.info("Registering handlers for start, menu, help, test")
 
-    # Callback Handlers
+    # Commands
+    app.add_handler(MessageHandler(start_cmd, filters.command("start", PREFIXES)), group=0)
+    app.add_handler(MessageHandler(menu_cmd, filters.command("menu", PREFIXES)), group=0)
+    app.add_handler(MessageHandler(help_cmd, filters.command("help", PREFIXES)), group=0)
+    app.add_handler(MessageHandler(test_cmd, filters.command("test", PREFIXES)), group=0)
+
+    # Callbacks
     app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex(r"^menu:open$")), group=0)
     app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex(r"^(?!menu)[A-Za-z0-9_]+:open$")), group=0)
-    app.add_handler(CallbackQueryHandler(menu_cb, filters.regex(r"^main:menu$")), group=0)
     app.add_handler(CallbackQueryHandler(close_cb, filters.regex(r"^menu:close$")), group=0)
-    app.add_handler(CallbackQueryHandler(close_main_cb, filters.regex(r"^main:close$")), group=0)
     app.add_handler(CallbackQueryHandler(help_cb, filters.regex(r"^help:.+")), group=0)
