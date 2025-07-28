@@ -1,3 +1,4 @@
+import logging
 from pyrogram import Client, filters
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -5,20 +6,33 @@ from utils.decorators import admin_required
 from utils.db import set_chat_setting, get_chat_setting
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from modules.buttons.rules import rules_panel
+from pyrogram.errors import RPCError
+
+LOGGER = logging.getLogger(__name__)
 
 async def rules_cmd(client, message):
     cid = message.chat.id if message.chat.type != 'private' else message.from_user.id
     rules = get_chat_setting(cid, 'rules_text', '⚠️ No rules set.')
     button = get_chat_setting(cid, 'rules_button')
     private = get_chat_setting(cid, 'privaterules', 'off') == 'on'
+
+    # If private rules are enabled and command used in group
     if private and message.chat.type != 'private':
+        if not message.from_user:
+            await message.reply("❌ I can't DM you. Please start me in private first.")
+            return
         try:
             await client.send_message(message.from_user.id, rules)
             await message.reply('📩 Rules have been sent to your PM.')
-        except:
+        except RPCError as e:
+            LOGGER.warning("Failed to send rules via PM: %s", e)
             await message.reply("❌ I can't DM you. Please start me in private first.")
         return
-    markup = InlineKeyboardMarkup([[InlineKeyboardButton(button, callback_data='rules:back')]]) if button else None
+
+    markup = (
+        InlineKeyboardMarkup([[InlineKeyboardButton(button, callback_data='rules:back')]])
+        if button else None
+    )
     await message.reply(rules, reply_markup=markup, disable_web_page_preview=True)
 
 @admin_required
@@ -73,7 +87,6 @@ async def rules_cb(client: Client, query: CallbackQuery):
         text = 'Unknown command.'
     await query.message.edit_text(text, reply_markup=rules_panel(), parse_mode='markdown')
     await query.answer()
-
 
 def register(app):
     app.add_handler(MessageHandler(rules_cmd, filters.command('rules', prefixes=PREFIXES) & (filters.group | filters.private)), group=0)
