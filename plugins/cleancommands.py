@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -9,7 +10,7 @@ import asyncio
 @admin_required
 async def set_clean(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/cleancommand <seconds|off>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/cleancommand <seconds|off>`', parse_mode=ParseMode.MARKDOWN)
         return
     arg = message.command[1].lower()
     if arg in {'off', '0'}:
@@ -21,10 +22,10 @@ async def set_clean(client: Client, message: Message):
             if delay < 1:
                 raise ValueError
         except ValueError:
-            await message.reply_text('Please provide a number greater than 0 or use `off`.', parse_mode='markdown')
+            await message.reply_text('Please provide a number greater than 0 or use `off`.', parse_mode=ParseMode.MARKDOWN)
             return
         set_chat_setting(message.chat.id, 'clean_delay', str(delay))
-        await message.reply_text(f'🧼 Commands will be deleted after `{delay}` seconds.', parse_mode='markdown')
+        await message.reply_text(f'🧼 Commands will be deleted after `{delay}` seconds.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def keep_command(client: Client, message: Message):

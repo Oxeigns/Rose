@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -12,7 +13,7 @@ async def logchannel_handler(client: Client, message: Message):
         log_id = get_chat_setting(message.chat.id, 'log_channel')
         if log_id:
             safe_id = escape_markdown(str(log_id))
-            await message.reply_text(f'📝 Log channel is set to: `{safe_id}`', parse_mode='markdown')
+            await message.reply_text(f'📝 Log channel is set to: `{safe_id}`', parse_mode=ParseMode.MARKDOWN)
         else:
             await message.reply_text('ℹ️ No log channel set.')
         return
@@ -36,17 +37,17 @@ async def logchannel_handler(client: Client, message: Message):
             return
         set_chat_setting(message.chat.id, 'log_channel', chat.id)
         safe_title = escape_markdown(chat.title)
-        await message.reply_text(f'✅ Logs will be sent to: `{safe_title}` (`{chat.id}`)', parse_mode='markdown')
+        await message.reply_text(f'✅ Logs will be sent to: `{safe_title}` (`{chat.id}`)', parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         safe_err = escape_markdown(str(e))
-        await message.reply_text(f'❌ Failed to set log channel:\n`{safe_err}`', parse_mode='markdown')
+        await message.reply_text(f'❌ Failed to set log channel:\n`{safe_err}`', parse_mode=ParseMode.MARKDOWN)
 
 async def send_log(client: Client, chat_id: int, text: str):
     log_id = get_chat_setting(chat_id, 'log_channel')
     if not log_id:
         return
     try:
-        await client.send_message(log_id, text, parse_mode='markdown')
+        await client.send_message(log_id, text, parse_mode=ParseMode.MARKDOWN)
     except Exception:
         pass
 

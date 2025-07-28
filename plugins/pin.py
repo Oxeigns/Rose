@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from utils.decorators import admin_required
@@ -11,7 +12,7 @@ async def pinned_cmd(client: Client, message):
         await message.reply('📌 No message is pinned currently.')
     else:
         content = chat.pinned_message.text or chat.pinned_message.caption or '📎 [Media message]'
-        await message.reply(f'📌 **Pinned Message:**\n\n{content}', parse_mode='markdown')
+        await message.reply(f'📌 **Pinned Message:**\n\n{content}', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def pin_cmd(client: Client, message):
@@ -27,7 +28,7 @@ async def pin_cmd(client: Client, message):
 @admin_required
 async def permapin_cmd(client: Client, message):
     if len(message.command) < 2:
-        await message.reply('Usage: `/permapin <text>`', parse_mode='markdown')
+        await message.reply('Usage: `/permapin <text>`', parse_mode=ParseMode.MARKDOWN)
         return
     text = ' '.join(message.command[1:])
     sent = await message.reply(text)
@@ -53,30 +54,30 @@ async def antichannelpin_cmd(client: Client, message):
     if len(message.command) == 1:
         state = get_chat_setting(message.chat.id, 'antichannelpin', 'off')
         safe_state = escape_markdown(state)
-        await message.reply(f'📡 Anti-channel pin is currently `{safe_state}`.', parse_mode='markdown')
+        await message.reply(f'📡 Anti-channel pin is currently `{safe_state}`.', parse_mode=ParseMode.MARKDOWN)
         return
     value = message.command[1].lower()
     if value not in {'on', 'off'}:
-        await message.reply('Usage: `/antichannelpin <on/off>`', parse_mode='markdown')
+        await message.reply('Usage: `/antichannelpin <on/off>`', parse_mode=ParseMode.MARKDOWN)
         return
     set_chat_setting(message.chat.id, 'antichannelpin', value)
     safe_val = escape_markdown(value)
-    await message.reply(f'📡 Anti-channel pin set to `{safe_val}`.', parse_mode='markdown')
+    await message.reply(f'📡 Anti-channel pin set to `{safe_val}`.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def cleanlinked_cmd(client: Client, message):
     if len(message.command) == 1:
         state = get_chat_setting(message.chat.id, 'cleanlinked', 'off')
         safe_state = escape_markdown(state)
-        await message.reply(f'🧼 Clean linked messages is `{safe_state}`.', parse_mode='markdown')
+        await message.reply(f'🧼 Clean linked messages is `{safe_state}`.', parse_mode=ParseMode.MARKDOWN)
         return
     value = message.command[1].lower()
     if value not in {'on', 'off'}:
-        await message.reply('Usage: `/cleanlinked <on/off>`', parse_mode='markdown')
+        await message.reply('Usage: `/cleanlinked <on/off>`', parse_mode=ParseMode.MARKDOWN)
         return
     set_chat_setting(message.chat.id, 'cleanlinked', value)
     safe_val = escape_markdown(value)
-    await message.reply(f'🧼 Clean linked messages set to `{safe_val}`.', parse_mode='markdown')
+    await message.reply(f'🧼 Clean linked messages set to `{safe_val}`.', parse_mode=ParseMode.MARKDOWN)
 
 
 def register(app):

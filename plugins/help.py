@@ -2,6 +2,7 @@
 
 import logging
 from pyrogram import filters
+from pyrogram.enums import ParseMode
 from pyrogram.handlers import MessageHandler
 from utils.errors import catch_errors
 from modules.constants import PREFIXES
@@ -36,7 +37,7 @@ async def help_cmd(client, message):
     LOGGER.debug("📩 /help command handled by help.py")
     text = "**Available Modules:**\n\n"
     text += "\n".join([f"- `{mod}`: {desc}" for mod, desc in HELP_MODULES.items()])
-    await message.reply_text(text, parse_mode="markdown")
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 def register(app) -> None:
     """Register a simple /help handler to ensure help works even if start.py fails."""

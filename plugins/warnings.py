@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from pyrogram import Client, filters, types
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import is_admin
@@ -165,7 +166,7 @@ async def warnings_cb(client: Client, query: CallbackQuery):
         text = 'Use /warnings to view current settings.'
     else:
         text = 'Unknown command.'
-    await query.message.edit_text(text, reply_markup=warnings_panel(), parse_mode='markdown')
+    await query.message.edit_text(text, reply_markup=warnings_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

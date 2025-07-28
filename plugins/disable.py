@@ -1,4 +1,5 @@
 from pyrogram import Client, filters, StopPropagation
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -25,22 +26,22 @@ DISABLED_CMDS = {}
 @admin_required
 async def disable_command(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/disable <command>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/disable <command>`', parse_mode=ParseMode.MARKDOWN)
         return
     cmd = message.command[1].lower().lstrip('/')
     chat_id = message.chat.id
     DISABLED_CMDS.setdefault(chat_id, set()).add(cmd)
-    await message.reply_text(f'🚫 Command `/{cmd}` has been disabled.', parse_mode='markdown')
+    await message.reply_text(f'🚫 Command `/{cmd}` has been disabled.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def enable_command(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/enable <command>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/enable <command>`', parse_mode=ParseMode.MARKDOWN)
         return
     cmd = message.command[1].lower().lstrip('/')
     chat_id = message.chat.id
     DISABLED_CMDS.setdefault(chat_id, set()).discard(cmd)
-    await message.reply_text(f'✅ Command `/{cmd}` has been enabled.', parse_mode='markdown')
+    await message.reply_text(f'✅ Command `/{cmd}` has been enabled.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def list_disabled(client: Client, message: Message):
@@ -51,7 +52,7 @@ async def list_disabled(client: Client, message: Message):
         return
     text = '**🚫 Disabled Commands:**\n'
     text += '\n'.join((f'• `/{cmd}`' for cmd in sorted(disabled)))
-    await message.reply_text(text, parse_mode='markdown')
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 async def block_disabled(client: Client, message: Message):
     chat_id = message.chat.id

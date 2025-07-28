@@ -1,5 +1,6 @@
 import logging
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
@@ -38,7 +39,7 @@ async def rules_cmd(client, message):
 @admin_required
 async def setrules_cmd(client, message):
     if len(message.command) < 2 and (not message.reply_to_message):
-        await message.reply('📝 Usage: `/setrules <text>` or reply to a message', parse_mode='markdown')
+        await message.reply('📝 Usage: `/setrules <text>` or reply to a message', parse_mode=ParseMode.MARKDOWN)
         return
     text = message.reply_to_message.text if message.reply_to_message else ' '.join(message.command[1:])
     set_chat_setting(message.chat.id, 'rules_text', text)
@@ -85,7 +86,7 @@ async def rules_cb(client: Client, query: CallbackQuery):
         text = 'Use /setrulesbutton to set the rules button label.'
     else:
         text = 'Unknown command.'
-    await query.message.edit_text(text, reply_markup=rules_panel(), parse_mode='markdown')
+    await query.message.edit_text(text, reply_markup=rules_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 def register(app):

@@ -1,4 +1,5 @@
 from pyrogram import Client, filters, types
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from utils.decorators import admin_required
@@ -16,7 +17,7 @@ def build_permissions(**kwargs):
 @admin_required
 async def lock_cmd(client: Client, message: types.Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/lock <type>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/lock <type>`', parse_mode=ParseMode.MARKDOWN)
         return
     lock_type = message.command[1].lower()
     if lock_type == 'messages':
@@ -30,12 +31,12 @@ async def lock_cmd(client: Client, message: types.Message):
         return
     perms = build_permissions(**{perm: False})
     await client.set_chat_permissions(message.chat.id, perms)
-    await message.reply_text(f'🔒 Locked `{lock_type}`.', parse_mode='markdown')
+    await message.reply_text(f'🔒 Locked `{lock_type}`.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def unlock_cmd(client: Client, message: types.Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/unlock <type>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/unlock <type>`', parse_mode=ParseMode.MARKDOWN)
         return
     lock_type = message.command[1].lower()
     if lock_type == 'messages':
@@ -49,7 +50,7 @@ async def unlock_cmd(client: Client, message: types.Message):
         return
     perms = build_permissions(**{perm: True})
     await client.set_chat_permissions(message.chat.id, perms)
-    await message.reply_text(f'🔓 Unlocked `{lock_type}`.', parse_mode='markdown')
+    await message.reply_text(f'🔓 Unlocked `{lock_type}`.', parse_mode=ParseMode.MARKDOWN)
 
 async def lock_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
@@ -59,7 +60,7 @@ async def lock_cb(client: Client, query: CallbackQuery):
         text = 'Use /unlock <type> to unlock.'
     else:
         text = 'Unknown command.'
-    await query.message.edit_text(text, reply_markup=lock_panel(), parse_mode='markdown')
+    await query.message.edit_text(text, reply_markup=lock_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

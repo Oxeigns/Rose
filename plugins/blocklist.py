@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -8,22 +9,22 @@ BLOCKLIST = {}
 @admin_required
 async def add_blocked_word(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/addblock <word>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/addblock <word>`', parse_mode=ParseMode.MARKDOWN)
         return
     word = message.command[1].lower()
     chat_id = message.chat.id
     BLOCKLIST.setdefault(chat_id, set()).add(word)
-    await message.reply_text(f'🚫 Added `{word}` to blocklist.', parse_mode='markdown')
+    await message.reply_text(f'🚫 Added `{word}` to blocklist.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def remove_blocked_word(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/unblock <word>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/unblock <word>`', parse_mode=ParseMode.MARKDOWN)
         return
     word = message.command[1].lower()
     chat_id = message.chat.id
     BLOCKLIST.setdefault(chat_id, set()).discard(word)
-    await message.reply_text(f'✅ Removed `{word}` from blocklist.', parse_mode='markdown')
+    await message.reply_text(f'✅ Removed `{word}` from blocklist.', parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def show_blocklist(client: Client, message: Message):
@@ -35,7 +36,7 @@ async def show_blocklist(client: Client, message: Message):
     text = '**🚫 Blocked Words:**\n'
     for word in sorted(words):
         text += f'• `{word}`\n'
-    await message.reply_text(text, parse_mode='markdown')
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def clear_blocklist(client: Client, message: Message):

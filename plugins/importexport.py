@@ -1,5 +1,6 @@
 import json
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message, Document
 from pyrogram.handlers import MessageHandler
@@ -26,14 +27,14 @@ async def import_data(client: Client, message: Message):
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except Exception as e:
-        await message.reply(f'❌ Failed to parse JSON file:\n`{e}`', parse_mode='markdown')
+        await message.reply(f'❌ Failed to parse JSON file:\n`{e}`', parse_mode=ParseMode.MARKDOWN)
         return
     count = await import_chat_data(message.chat.id, data)
-    await message.reply(f'✅ Imported `{count}` items successfully.', parse_mode='markdown')
+    await message.reply(f'✅ Imported `{count}` items successfully.', parse_mode=ParseMode.MARKDOWN)
 
 async def importexport_help(client: Client, message: Message):
     text = '**📤 Import & Export Help**\n\n`/export` - Get current group settings as `.json`\n`/import` - Reply to a `.json` file to restore settings\n\n_Only group admins can use this. Useful for backups and moving data._'
-    await message.reply_text(text, parse_mode='markdown')
+    await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
 def register(app):

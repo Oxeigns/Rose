@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
@@ -9,7 +10,7 @@ async def ping(client: Client, message: Message):
     if message.chat.type == 'private':
         reply = await message.reply_text('Pong!')
         end = time.monotonic()
-        await reply.edit_text(f'Pong! `{(end - start) * 1000:.0f}ms`', parse_mode='markdown')
+        await reply.edit_text(f'Pong! `{(end - start) * 1000:.0f}ms`', parse_mode=ParseMode.MARKDOWN)
     else:
         await message.reply("📩 Pong sent in PM.")
         end = time.monotonic()
@@ -17,14 +18,14 @@ async def ping(client: Client, message: Message):
             await client.send_message(
                 message.from_user.id,
                 f'Pong! `{(end - start) * 1000:.0f}ms`',
-                parse_mode='markdown',
+                parse_mode=ParseMode.MARKDOWN,
             )
         except Exception:
             await message.reply("❌ I can't message you. Please start me in PM first.")
 
 async def echo(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply_text('Usage: `/echo <text>`', parse_mode='markdown')
+        await message.reply_text('Usage: `/echo <text>`', parse_mode=ParseMode.MARKDOWN)
         return
     await message.reply_text(' '.join(message.command[1:]))
 

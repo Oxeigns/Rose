@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -18,7 +19,7 @@ def _get_note(chat_id: int, name: str):
 @admin_required
 async def save_note(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply('Usage: `/save <name>` (reply or give text)', parse_mode='markdown')
+        await message.reply('Usage: `/save <name>` (reply or give text)', parse_mode=ParseMode.MARKDOWN)
         return
     name = message.command[1].lower()
     if message.reply_to_message:
@@ -36,7 +37,7 @@ async def save_note(client: Client, message: Message):
 @admin_required
 async def clear_note(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply('Usage: `/clear <name>`', parse_mode='markdown')
+        await message.reply('Usage: `/clear <name>`', parse_mode=ParseMode.MARKDOWN)
         return
     name = message.command[1].lower()
     cur = conn.cursor()
@@ -52,7 +53,7 @@ async def list_notes(client: Client, message: Message):
         await message.reply('❌ No notes found in this chat.')
     else:
         text = '**📝 Saved Notes:**\n' + '\n'.join((f'• `{n[0]}`' for n in rows))
-        await message.reply(text, reply_markup=notes_panel(), parse_mode='markdown')
+        await message.reply(text, reply_markup=notes_panel(), parse_mode=ParseMode.MARKDOWN)
 
 @admin_required
 async def clear_all_notes(client: Client, message: Message):
@@ -66,11 +67,11 @@ async def private_notes_toggle(client: Client, message: Message):
     current = get_chat_setting(message.chat.id, 'privatenotes', 'off')
     new = 'off' if current == 'on' else 'on'
     set_chat_setting(message.chat.id, 'privatenotes', new)
-    await message.reply(f'🔒 Private notes are now `{new}`.', parse_mode='markdown')
+    await message.reply(f'🔒 Private notes are now `{new}`.', parse_mode=ParseMode.MARKDOWN)
 
 async def get_note_cmd(client: Client, message: Message):
     if len(message.command) < 2:
-        await message.reply('Usage: `/get <name>`', parse_mode='markdown')
+        await message.reply('Usage: `/get <name>`', parse_mode=ParseMode.MARKDOWN)
         return
     name = message.command[1].lower()
     content = _get_note(message.chat.id, name)
@@ -97,9 +98,9 @@ async def get_note_hash(client: Client, message: Message):
 async def notes_cb(client: Client, query: CallbackQuery):
     data = query.data.split(':')[1]
     if data == 'example':
-        await query.message.edit_text('📌 To save a note:\nReply to a message and use `/save keyword`\nOr `/save keyword content`.', reply_markup=notes_panel(), parse_mode='markdown')
+        await query.message.edit_text('📌 To save a note:\nReply to a message and use `/save keyword`\nOr `/save keyword content`.', reply_markup=notes_panel(), parse_mode=ParseMode.MARKDOWN)
     elif data == 'format':
-        await query.message.edit_text('**📎 Formatting Guide**\n- Markdown supported\n- Buttons via `[text](url)` allowed.', reply_markup=notes_panel(), parse_mode='markdown')
+        await query.message.edit_text('**📎 Formatting Guide**\n- Markdown supported\n- Buttons via `[text](url)` allowed.', reply_markup=notes_panel(), parse_mode=ParseMode.MARKDOWN)
     await query.answer()
 
 

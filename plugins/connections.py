@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -27,7 +28,7 @@ async def show_connection(client: Client, message: Message):
     if chat_id:
         try:
             chat = await client.get_chat(chat_id)
-            await message.reply_text(f'🔌 Currently connected to: `{chat.title}` (`{chat.id}`)', parse_mode='markdown')
+            await message.reply_text(f'🔌 Currently connected to: `{chat.title}` (`{chat.id}`)', parse_mode=ParseMode.MARKDOWN)
         except Exception:
             await message.reply_text('⚠️ Could not access connected group.')
     else:

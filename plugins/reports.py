@@ -1,5 +1,6 @@
 import logging
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
@@ -43,7 +44,7 @@ async def handle_report(client: Client, message: Message):
     try:
         await message.reply(
             report_text,
-            parse_mode="markdown",
+            parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
         )
     except RPCError as e:

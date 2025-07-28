@@ -1,4 +1,5 @@
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler
 
@@ -7,11 +8,11 @@ async def privacy_cmd(client: Client, message):
     if message.chat.type != 'private':
         await message.reply("📩 I've sent you my privacy policy in PM.")
         try:
-            await client.send_message(message.from_user.id, text, parse_mode='markdown')
+            await client.send_message(message.from_user.id, text, parse_mode=ParseMode.MARKDOWN)
         except Exception:
             await message.reply("❌ I can't message you. Please start me in PM first.")
     else:
-        await message.reply(text, parse_mode='markdown')
+        await message.reply(text, parse_mode=ParseMode.MARKDOWN)
 
 async def del_my_data(client: Client, message):
     await message.reply('🗑️ Your data has been deleted from our systems (mock response).')
