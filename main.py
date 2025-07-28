@@ -21,7 +21,7 @@ LOG_DIR.mkdir(exist_ok=True)
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format=LOG_FORMAT,
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -34,7 +34,7 @@ error_handler.setLevel(logging.ERROR)
 logging.getLogger().addHandler(error_handler)
 
 LOGGER = logging.getLogger(__name__)
-logging.getLogger("pyrogram").setLevel(logging.DEBUG)
+logging.getLogger("pyrogram").setLevel(logging.INFO)
 
 # Asyncio loop exception handling
 def _loop_exception_handler(loop, context) -> None:
