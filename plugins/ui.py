@@ -20,7 +20,29 @@ from pyrogram.types import (
 )
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
-from .help import HELP_MODULES
+# Inline help descriptions for each supported module
+HELP_MODULES = {
+    "help": "Display the help panel with inline buttons.",
+    "id": "Get your user ID or the replied user's ID.",
+    "info": "Show detailed profile information about a user.",
+    "donate": "Show the donation link to support the bot.",
+    "markdownhelp": "Guide on formatting text with Markdown.",
+    "runs": "Fun command to make the bot 'run away'.",
+    "limits": "Display bot usage limits.",
+    "ping": "Check if the bot is online and responsive.",
+    # Core features
+    "admin": "Administrative tools for group moderators.",
+    "filters": "Create and manage automated filters.",
+    "rules": "Set or display the group rules.",
+    "warnings": "Warn users and manage warning limits.",
+    "approvals": "Allow trusted users to bypass restrictions.",
+    "lock": "Restrict messages, media, or actions.",
+    "notes": "Save and retrieve custom notes.",
+    "greetings": "Send greetings to new members.",
+    "connections": "Link groups/chats for shared actions.",
+    "pinline": "Pin messages with an inline button.",
+    "reports": "Enable members to report messages.",
+}
 from utils.errors import catch_errors
 from modules.buttons import (
     admin_panel,
@@ -47,6 +69,7 @@ MODULE_BUTTONS = [
     ("✅ Approvals", "approvals:open"),
     ("🔒 Lock", "lock:open"),
     ("📝 Notes", "notes:open"),
+    ("ℹ️ Help", "help:main"),
 ]
 
 MODULE_PANELS = {
@@ -91,7 +114,10 @@ def help_menu() -> InlineKeyboardMarkup:
         for mod in sorted(HELP_MODULES.keys(), key=str.lower):
             buttons.append((mod.title(), f"help:{mod}"))
     rows = _chunk_buttons(buttons)
-    rows.append([InlineKeyboardButton("❌ Close", callback_data="help:close")])
+    rows.append([
+        InlineKeyboardButton("⬅️ Back", callback_data="menu:open"),
+        InlineKeyboardButton("❌ Close", callback_data="help:close"),
+    ])
     return InlineKeyboardMarkup(rows)
 
 
@@ -191,7 +217,11 @@ async def help_cmd(client: Client, message: Message):
     user_id = getattr(message.from_user, "id", None)
 
     if chat_type == "private":
-        await message.reply_text(response, reply_markup=help_menu(), parse_mode=ParseMode.MARKDOWN)
+        await message.reply_text(
+            response,
+            reply_markup=help_menu(),
+            parse_mode=ParseMode.MARKDOWN,
+        )
     else:
         await message.reply("📩 I've sent you a PM with help information.")
         if user_id:
@@ -259,9 +289,22 @@ async def help_cb(client: Client, query: CallbackQuery):
     mod = query.data.split(":")[1]
     if mod == "close":
         await query.message.delete()
+        await query.answer()
+        return
+    if mod == "main":
+        await query.message.edit_text(
+            "**🛠 Help Panel**\nSelect a module to see its commands:",
+            reply_markup=help_menu(),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        await query.answer()
         return
     text = HELP_MODULES.get(mod, "❌ Module not found.")
-    await query.message.edit_text(text, reply_markup=help_menu(), parse_mode=ParseMode.MARKDOWN)
+    await query.message.edit_text(
+        text,
+        reply_markup=help_menu(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     await query.answer()
 
 
