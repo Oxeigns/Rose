@@ -40,7 +40,7 @@ async def help_cmd(client, message):
     await message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 def register(app) -> None:
-    """Register a simple /help handler to ensure help works even if start.py fails."""
+    """Register a simple /help handler to ensure help works even if ui.py fails."""
     LOGGER.info("Registering standalone help command from help.py")
     app.add_handler(
         MessageHandler(help_cmd, filters.command("help", prefixes=PREFIXES)),
