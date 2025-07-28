@@ -95,7 +95,7 @@ def format_module_help(mod: str) -> str:
     data = HELP_ITEMS.get(mod)
     if not data:
         return "Module not found."
-    cmds = "\n".join(data["cmds"])
+    cmds = "\n".join(f"`{cmd}`" for cmd in data["cmds"])
     return f"**{mod.title()} Module**\n{data['desc']}\n\n{cmds}"
 
 
@@ -139,12 +139,12 @@ async def help_open_cb(client: Client, query: CallbackQuery):
 
 @catch_errors
 async def support_cb(client: Client, query: CallbackQuery):
-    await query.answer("Support: https://t.me/support_chat", show_alert=True)
+    await query.answer("Support: https://t.me/support", show_alert=True)
 
 
 @catch_errors
 async def dev_cb(client: Client, query: CallbackQuery):
-    await query.answer("Developer: https://t.me/oxeign", show_alert=True)
+    await query.answer("Developer: https://t.me/developer", show_alert=True)
 
 
 @catch_errors
