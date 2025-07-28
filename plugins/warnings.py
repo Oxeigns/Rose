@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from pyrogram import Client, filters, types
 from modules.constants import PREFIXES
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -9,7 +10,10 @@ import aiosqlite
 from db.warns import DB_PATH
 from pyrogram.types import CallbackQuery
 from modules.buttons.warnings import warnings_panel
+from pyrogram.errors import RPCError
+
 DEFAULT_LIMIT = 3
+LOGGER = logging.getLogger(__name__)
 
 @is_admin
 async def warn_user(client, message):
@@ -58,9 +62,11 @@ async def soft_warn(client, message):
     count = await add_warn(user_id, chat_id)
     limit = int(get_chat_setting(chat_id, 'warn_limit', DEFAULT_LIMIT))
     try:
-        await message.reply_to_message.reply(f'You were warned in {message.chat.title}. ({count}/{limit}) {reason}')
-    except:
-        pass
+        await message.reply_to_message.reply(
+            f'You were warned in {message.chat.title}. ({count}/{limit}) {reason}'
+        )
+    except RPCError as e:
+        LOGGER.warning("Failed to reply to warned user: %s", e)
     if count >= limit:
         mode = get_chat_setting(chat_id, 'warn_mode', 'ban')
         time_value = int(get_chat_setting(chat_id, 'warn_time', '600'))
