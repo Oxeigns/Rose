@@ -223,7 +223,12 @@ async def test_cmd(client: Client, message: Message):
 # =====================================================
 
 async def menu_open_cb(client: Client, query: CallbackQuery):
-    await query.message.edit_text("**📋 Control Panel**", reply_markup=build_menu(), parse_mode=ParseMode.MARKDOWN)
+    """Open the main control panel from any supported callback."""
+    await query.message.edit_text(
+        "**📋 Control Panel**",
+        reply_markup=build_menu(),
+        parse_mode=ParseMode.MARKDOWN,
+    )
     await query.answer()
 
 
@@ -245,6 +250,7 @@ async def panel_open_cb(client: Client, query: CallbackQuery):
 
 
 async def close_cb(client: Client, query: CallbackQuery):
+    """Delete the menu message when the user presses Close."""
     await query.message.delete()
     await query.answer()
 
@@ -273,7 +279,25 @@ def register(app: Client):
     app.add_handler(MessageHandler(test_cmd, filters.command("test", PREFIXES)), group=0)
 
     # Callbacks
-    app.add_handler(CallbackQueryHandler(menu_open_cb, filters.regex(r"^menu:open$")), group=0)
-    app.add_handler(CallbackQueryHandler(panel_open_cb, filters.regex(r"^(?!menu)[A-Za-z0-9_]+:open$")), group=0)
-    app.add_handler(CallbackQueryHandler(close_cb, filters.regex(r"^menu:close$")), group=0)
+    app.add_handler(
+        CallbackQueryHandler(
+            menu_open_cb,
+            filters.regex(r"^(menu:open|main:menu)$"),
+        ),
+        group=0,
+    )
+    app.add_handler(
+        CallbackQueryHandler(
+            panel_open_cb,
+            filters.regex(r"^(?!menu)[A-Za-z0-9_]+:open$"),
+        ),
+        group=0,
+    )
+    app.add_handler(
+        CallbackQueryHandler(
+            close_cb,
+            filters.regex(r"^(menu:close|main:close)$"),
+        ),
+        group=0,
+    )
     app.add_handler(CallbackQueryHandler(help_cb, filters.regex(r"^help:.+")), group=0)
