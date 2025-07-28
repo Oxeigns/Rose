@@ -154,7 +154,13 @@ async def _set_webhook(client: Client) -> None:
 # Main
 # -------------------------------------------------------------
 async def _startup() -> None:
+    # Ensure handler registration tasks run on the current loop
+    app.loop = asyncio.get_running_loop()
+    app.dispatcher.loop = app.loop
     plugin_count = register_all(app)
+    # Allow dispatcher tasks scheduled by add_handler() to run so
+    # app.dispatcher.groups gets populated before we count handlers
+    await asyncio.sleep(0)
     LOGGER.debug("📚 Initializing database...")
     await init_db()
     LOGGER.info("✅ Database ready")
