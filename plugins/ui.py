@@ -1,3 +1,5 @@
+"""Telegram UI plugin handling start, menu, and help commands."""
+
 import logging
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
