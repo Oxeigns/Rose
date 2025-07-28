@@ -169,9 +169,9 @@ async def _startup() -> None:
 
 async def _run_polling() -> None:
     LOGGER.info("🚀 Starting Rose bot in polling mode...")
+    await _startup()
     async with app:
         await _delete_webhook(app)
-        await _startup()
         LOGGER.info("✅ Bot is ready to receive updates")
         await idle()
     LOGGER.info("✅ Bot stopped cleanly.")
@@ -182,9 +182,9 @@ async def _run_webhook() -> None:
     import uvicorn
 
     setup(app)
+    await _startup()
     await app.start()
     await _set_webhook(app)
-    await _startup()
     LOGGER.info("✅ Bot is ready to receive updates")
 
     port = int(os.getenv("PORT", "10000"))
