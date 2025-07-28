@@ -1,4 +1,10 @@
-"""Help module descriptions used by the start module."""
+"""Help module: provides HELP_MODULES and registers a standalone /help handler."""
+
+import logging
+from pyrogram import filters
+from pyrogram.handlers import MessageHandler
+from utils.errors import catch_errors
+from modules.constants import PREFIXES
 
 HELP_MODULES = {
     'help': 'Display this help message with inline buttons.',
@@ -22,7 +28,20 @@ HELP_MODULES = {
     'reports': 'Report messages to admins.',
 }
 
+LOGGER = logging.getLogger(__name__)
+
+@catch_errors
+async def help_cmd(client, message):
+    """Standalone handler for /help command."""
+    LOGGER.debug("📩 /help command handled by help.py")
+    text = "**Available Modules:**\n\n"
+    text += "\n".join([f"- `{mod}`: {desc}" for mod, desc in HELP_MODULES.items()])
+    await message.reply_text(text, parse_mode="markdown")
 
 def register(app) -> None:
-    """This module only provides HELP_MODULES and registers no handlers."""
-    pass
+    """Register a simple /help handler to ensure help works even if start.py fails."""
+    LOGGER.info("Registering standalone help command from help.py")
+    app.add_handler(
+        MessageHandler(help_cmd, filters.command("help", prefixes=PREFIXES)),
+        group=1
+    )
