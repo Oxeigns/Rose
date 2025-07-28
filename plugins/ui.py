@@ -175,13 +175,21 @@ async def start_cmd(client: Client, message: Message):
             parse_mode=ParseMode.MARKDOWN,
         )
     else:
-        await message.reply("📩 I've sent you a PM with configuration options.")
+        await message.reply_text(
+            group_text,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("📋 Open Menu", callback_data="menu:open")]]
+            ),
+            parse_mode=ParseMode.MARKDOWN,
+        )
         if user_id:
             success = await _pm_user(
                 client,
                 user_id,
                 private_text,
-                InlineKeyboardMarkup([[InlineKeyboardButton("📋 Open Menu", callback_data="menu:open")]]),
+                InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("📋 Open Menu", callback_data="menu:open")]]
+                ),
             )
             if not success:
                 await message.reply("❌ Please start me in private to access settings.")
