@@ -59,10 +59,6 @@ DEPLOY_MODE = os.getenv("DEPLOY_MODE", "polling").lower()
 USE_WEBHOOK = DEPLOY_MODE == "webhook"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-if USE_WEBHOOK and not WEBHOOK_URL:
-    LOGGER.error("DEPLOY_MODE=webhook but WEBHOOK_URL is not set")
-    raise SystemExit(1)
-
 if not all([API_ID, API_HASH, BOT_TOKEN]):
     print("❌ API_ID, API_HASH, and BOT_TOKEN must be provided.", file=sys.stderr)
     raise SystemExit(1)
@@ -144,12 +140,6 @@ async def _delete_webhook(client: Client) -> None:
     if hasattr(client, "delete_webhook"):
         await client.delete_webhook(drop_pending_updates=True)
 
-async def _set_webhook(client: Client) -> None:
-    if not WEBHOOK_URL:
-        return
-    LOGGER.debug("🌐 Setting webhook to %s", WEBHOOK_URL)
-    await client.set_webhook(WEBHOOK_URL)
-
 # -------------------------------------------------------------
 # Main
 # -------------------------------------------------------------
@@ -184,13 +174,11 @@ async def _run_polling() -> None:
 
 async def _run_webhook() -> None:
     LOGGER.info("🚀 Starting Rose bot in webhook mode...")
-    from web import setup, web_app
+    from web import web_app
     import uvicorn
 
-    setup(app)
     await _startup()
     await app.start()
-    await _set_webhook(app)
     LOGGER.info("✅ Bot is ready to receive updates")
 
     port = int(os.getenv("PORT", "10000"))
@@ -211,8 +199,8 @@ async def _run_webhook() -> None:
 if __name__ == "__main__":
     try:
         if USE_WEBHOOK:
-            asyncio.run(_run_webhook())
+            app.run(_run_webhook())
         else:
-            asyncio.run(_run_polling())
+            app.run(_run_polling())
     except KeyboardInterrupt:
         LOGGER.info("🔌 Interrupted. Exiting...")
